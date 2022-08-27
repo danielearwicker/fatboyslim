@@ -1,0 +1,85 @@
+.App {
+  font-family: sans-serif;
+}
+
+.over-the-limit {
+  color: hotpink;
+}
+
+.calorie-bar {
+  margin-top: 1em;
+  border-radius: 0.5em;
+  background: burlywood;
+  position: relative;
+
+  .progress {
+    height: 1.2em;
+    background:brown;
+    border-radius: 0.5em;
+  }
+
+  .ate {
+    position: absolute;
+    left: 5px;
+    top: 0.1em;
+    color: white;
+  }
+
+  .remaining {
+    position: absolute;
+    right: 5px;
+    top: 0.1em;
+  }
+}
+
+.meal {
+  margin: 1em 0;
+  padding: 0.5em;
+  background: beige;
+  border-radius: 0.5em;
+  box-shadow: silver 5px 5px 5px;
+
+  .meal-heading {
+    font-weight: bold;
+  }
+
+  .comestible {
+    margin: 0.5em;
+    background: cornflowerblue;
+    color: white;
+    padding: 0.3em;
+    border-radius: 0.5em;
+    display: inline-block;
+
+    .calories {
+      padding-right: 0.2em;
+      color: darkorange;
+    }
+
+    .quantity {
+      margin-left: 0.2em;
+      padding: 0 0.2em;
+      border-radius: 4px;
+      color: black;
+      cursor: pointer;
+      background: gold;
+    }
+
+    .delete {
+      font-size: 0.8em;
+      padding-left: 0.5em;
+      cursor: pointer;
+    }
+
+    &.addable {
+      opacity: 0.5;
+      cursor: pointer;
+    }
+  }
+
+  .add-comestible {
+    .calories {
+      width: 5em;
+    }
+  }
+}
