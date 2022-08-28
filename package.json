@@ -5,11 +5,13 @@
   "keywords": [],
   "dependencies": {
     "@azure/storage-blob": "^12.11.0",
+    "@types/react-vis": "^1.11.11",
     "@types/underscore": "1.11.4",
     "immer": "9.0.15",
     "parcel": "^2.7.0",
     "react": "18.0.0",
     "react-dom": "18.0.0",
+    "react-vis": "^1.11.7",
     "sass": "^1.54.5"
   },
   "devDependencies": {

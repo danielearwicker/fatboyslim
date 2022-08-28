@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { ConfigureStorage } from "./ConfigureStorage";
 import { FatboySlim } from "./FatboySlim";
-import { slimStorage } from "./storage";
+import { useSlimStorage } from "./storage";
 import "./styles.scss";
 
 export default function App() {
-  const [storage, setStorage] = useState(slimStorage());
+  const storage = useSlimStorage();
 
   return (
     <div className="App">
       {        
-        !storage.configured ? <ConfigureStorage setStorage={setStorage} /> : <FatboySlim storage={storage} />
+        !storage.configured ? <ConfigureStorage storage={storage} /> : <FatboySlim storage={storage} />
       }      
     </div>
   );

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { Day, FatboyData, Meal } from "./data";
 import { FatboyAction } from "./reducer";
-import "./styles.scss";
 
 export type AddComestibleProps = Readonly<{
   day: Day;
@@ -10,12 +9,12 @@ export type AddComestibleProps = Readonly<{
   dispatch: React.Dispatch<FatboyAction>;
 }>;
 
-export function AddComestible({
+export const AddComestible = memo(({
   day,
   meal,
   state,
   dispatch
-}: AddComestibleProps) {
+}: AddComestibleProps) => {
   const [search, setSearch] = useState("");
   const [calories, setCalories] = useState("");
 
@@ -109,4 +108,4 @@ export function AddComestible({
       </div>
     </>
   );
-}
+});

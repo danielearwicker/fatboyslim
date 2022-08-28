@@ -1,29 +1,30 @@
-import { useState } from "react";
-import { SlimStorage, slimStorage } from "./storage";
-import "./styles.scss";
+import { memo, useCallback, useState } from "react";
+import { SlimStorage } from "./storage";
 
 export interface ConfigureStorageProps {
-  setStorage(storage: SlimStorage): void;
+  storage: SlimStorage;
 } 
 
-export function ConfigureStorage({ setStorage }: ConfigureStorageProps) {
+export const ConfigureStorage = memo(({ storage }: ConfigureStorageProps) => {
   const [sasToken, setSasToken] = useState("");
   
-  function save() {
-    const storage = slimStorage();
+  const save = useCallback(() => {    
     storage.setSasToken(sasToken);
-    setStorage(storage);
-  }
+  }, [sasToken, storage]);
+
+  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSasToken(e.target.value);
+  }, []);
 
   return (
     <div>
       <div>Enter SAS token</div>
       <div>
-        <input type="password" value={sasToken} onChange={e => setSasToken(e.target.value)} />
+        <input type="password" value={sasToken} onChange={onChange} />
       </div>
       <div>
         <button onClick={save}>Save</button>
       </div>
     </div>
   );
-}
+});

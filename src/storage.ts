@@ -1,65 +1,142 @@
-import { BlobServiceClient } from "@azure/storage-blob";
+import { BlobServiceClient, RestError } from "@azure/storage-blob";
+import { config } from "process";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { FatboyData } from "./data";
+import { FatboyAction, fatboyReducer } from "./reducer";
 import "./styles.scss";
 
-export function slimStorage() {
-  const localKey = "fatboyslim-cs";
-  const blobUri = "https://drefatboyslim.blob.core.windows.net/data/everything";
+export interface VersionedFatboyData {
+  data: FatboyData;
+  version: string;
+}
 
-  let sasToken = localStorage.getItem(localKey) ?? "";
+const initialState: FatboyData = {
+  comestibles: [],
+  days: [],
+  editingDay: "2022-08-27"
+};
+
+const localKey = "fatboyslim-cs";
+
+export function useSlimStorage() {
+  const [state, dispatchWithoutSave] = useReducer(fatboyReducer, initialState);
+  const [version, setVersion] = useState("none");
+  const [sasToken, setSasToken] = useState(localStorage.getItem(localKey) ?? "");
+  const shouldLoad = useRef(true);
+  const [shouldSave, setShouldSave] = useState(false);
   
-  function getFullUri() {
-    return `${blobUri}?${sasToken}`;
+  async function loadBlob(): Promise<VersionedFatboyData> {    
+    const client = new BlobServiceClient(`https://drefatboyslim.blob.core.windows.net?${sasToken}`);
+    const container = client.getContainerClient("data");
+    const remoteBlob = container.getBlockBlobClient("everything");
+    const fetchedBlob = await remoteBlob.download();
+    const version = fetchedBlob.etag!;
+    const body = await fetchedBlob.blobBody;
+    const json = await body!.text();
+    const data = JSON.parse(json) as FatboyData;
+    return { data, version };
   }
 
-  let saveTimer: number | undefined = undefined;
+  async function saveBlob(versioned: VersionedFatboyData) {
+    const client = new BlobServiceClient(`https://drefatboyslim.blob.core.windows.net?${sasToken}`);
+    const container = client.getContainerClient("data");
+    const remoteBlob = container.getBlockBlobClient("everything");
+
+    const blob = new Blob([JSON.stringify(versioned.data)], {
+      type: "text/json"
+    });
+
+    const result = await remoteBlob.uploadData(blob, {
+      conditions: {
+        ifMatch: versioned.version
+      }
+    });
+
+    console.log("Saved version", result.etag);
+    setVersion(result.etag!);
+  }
+
+  useEffect(() => {
+    async function load() {
+      try {        
+        const loaded = await loadBlob();
+        dispatchWithoutSave({ type: "LOAD", config: loaded.data });
+        console.log("Loaded version", loaded.version);
+        setVersion(loaded.version);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (shouldLoad.current) {
+      shouldLoad.current = false;      
+      load();
+    }
+  }, []);
   
-  let loadPromise: undefined | Promise<FatboyData>;
+  const saveTimer = useRef<number | undefined>();
+  const queuedActions = useRef<FatboyAction[]>([]);
+
+  function saveSoon() {
+    if (saveTimer.current !== undefined) {
+      window.clearTimeout(saveTimer.current);
+    }
+
+    saveTimer.current = window.setTimeout(() => setShouldSave(true), 2000); 
+  }
+
+  useEffect(() => {
+    async function reconcile() {            
+
+      try {          
+        await saveBlob({ data: state, version });
+        queuedActions.current = [];
+        return;
+
+      } catch (e) {
+        const er = e as Error;
+        console.log(`reconcile after failing based on version`, version, er.message);
+
+        const loaded = await loadBlob();
+        dispatchWithoutSave({ type: "LOAD", config: loaded.data });
+
+        console.log("Loaded version", loaded.version);
+        setVersion(loaded.version);
+
+        for (const action of queuedActions.current) {
+          console.log("Reapplying", action);
+          dispatchWithoutSave(action);
+        }
+
+        saveSoon();
+      }
+    }
+
+    if (shouldSave) {
+      setShouldSave(false);
+      reconcile();
+    }
+  }, [shouldSave, state]);
 
   return {
+    state,
+
     get configured() {
       return !!sasToken;
     },
 
     setSasToken(token: string) {
       localStorage.setItem(localKey, token);
-      sasToken = token;
+      setSasToken(token);
     },
 
-    async load(): Promise<FatboyData> {
-      if (!loadPromise) {
-        console.log("Starting load");
-        loadPromise = (async () => {
-          const fetched = await fetch(getFullUri());
-          const json = await fetched.text();      
-          return JSON.parse(json) as FatboyData;
-        })();
-      }
+    dispatch(action: FatboyAction) {
+      queuedActions.current.push(action);
+      dispatchWithoutSave(action);
 
-      return await loadPromise;      
-    },
-
-    async saveSoon(config: FatboyData) {
-      if (saveTimer !== undefined) {
-        window.clearTimeout(saveTimer);
-      }
-
-      saveTimer = window.setTimeout(async () => {
-
-        const client = new BlobServiceClient(`https://drefatboyslim.blob.core.windows.net?${sasToken}`);
-        const container = client.getContainerClient("data");
-        const remoteBlob = container.getBlockBlobClient("everything");
-
-        const blob = new Blob([JSON.stringify(config)], {
-          type: "text/json"
-        });
-
-        await remoteBlob.uploadData(blob);
-
-      }, 2000);
-
+      saveSoon();
     }
   }
 }
 
-export type SlimStorage = ReturnType<typeof slimStorage>;
+export type SlimStorage = ReturnType<typeof useSlimStorage>;
