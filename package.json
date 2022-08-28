@@ -3,25 +3,28 @@
   "version": "1.0.0",
   "description": "",
   "keywords": [],
-  "main": "src/index.tsx",
   "dependencies": {
+    "@azure/storage-blob": "^12.11.0",
     "@types/underscore": "1.11.4",
     "immer": "9.0.15",
+    "parcel": "^2.7.0",
     "react": "18.0.0",
     "react-dom": "18.0.0",
-    "react-scripts": "4.0.3",
-    "underscore": "1.13.4"
+    "sass": "^1.54.5"
   },
   "devDependencies": {
+    "@parcel/transformer-sass": "2.7.0",
     "@types/react": "17.0.20",
-    "@types/react-dom": "17.0.9",
-    "typescript": "4.4.2"
+    "@types/react-dom": "^18.0.6",
+    "buffer": "^6.0.3",
+    "process": "^0.11.10",
+    "typescript": "^4.8.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "start": "parcel index.html",
+    "build": "rm -rf dist && parcel build index.html",
+    "deploy": "az storage blob upload-batch -d '$web' --account-name drefatboyslim -s dist --overwrite",
+    "bd": "npm run build && npm run deploy"
   },
   "browserslist": [
     ">0.2%",
