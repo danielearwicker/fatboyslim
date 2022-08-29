@@ -1,5 +1,6 @@
 import produce from "immer";
-import { FatboyData, Meal, today } from "./data";
+import { WritableDraft } from "immer/dist/internal";
+import { addDays, Category, Comestible, FatboyData, Meal, today } from "./data";
 
 export type FatboyAction =
   | {
@@ -14,6 +15,12 @@ export type FatboyAction =
       type: "TODAY";
     }
   | {
+    type: "DAY_BEFORE";
+  }
+  | {
+    type: "DAY_AFTER";
+  }
+  | {
       type: "DELETE_ATE";
       meal: Meal;
       comestible: string;
@@ -27,7 +34,13 @@ export type FatboyAction =
       type: "ADD_COMESTIBLE";
       name: string;
       calories: number;
-    };
+      category: Category;
+    }
+  | {
+      type: "SET_CATEGORY";
+      category: Category;
+      comestible: string;
+    }
 
 export function fatboyReducer(data: FatboyData, action: FatboyAction) {
   switch (action.type) {
@@ -40,6 +53,14 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
     case "TODAY":
       return produce(data, (draft) => {
         draft.editingDay = today();
+      });
+    case "DAY_BEFORE":
+      return produce(data, (draft) => {
+        draft.editingDay = addDays(draft.editingDay, -1);
+      });
+    case "DAY_AFTER":
+      return produce(data, (draft) => {
+        draft.editingDay = addDays(draft.editingDay, 1);
       });
     case "DELETE_ATE":
       return produce(data, (draft) => {
@@ -94,8 +115,16 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
         ) {
           draft.comestibles.push({
             name: action.name,
-            calories: action.calories
+            calories: action.calories,
+            category: action.category
           });
+        }
+      });
+    case "SET_CATEGORY":
+      return produce(data, (draft) => {
+        const c = draft.comestibles.find(x => x.name === action.comestible);
+        if (c) {
+          c.category = action.category;
         }
       });
   }

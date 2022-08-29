@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { ConfigureStorage } from "./ConfigureStorage";
-import { FatboySlim } from "./FatboySlim";
+import { Tabs } from "./Tabs";
 import { useSlimStorage } from "./storage";
 import "./styles.scss";
 
@@ -10,7 +9,7 @@ export default function App() {
   return (
     <div className="App">
       {        
-        !storage.configured ? <ConfigureStorage storage={storage} /> : <FatboySlim storage={storage} />
+        !storage.configured ? <ConfigureStorage storage={storage} /> : <Tabs storage={storage} />
       }      
     </div>
   );

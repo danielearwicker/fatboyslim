@@ -1,5 +1,5 @@
 import React, { memo, useState } from "react";
-import { Day, FatboyData, Meal } from "./data";
+import { categories, Category, Day, FatboyData, Meal, searchComestibles } from "./data";
 import { FatboyAction } from "./reducer";
 
 export type AddComestibleProps = Readonly<{
@@ -17,25 +17,14 @@ export const AddComestible = memo(({
 }: AddComestibleProps) => {
   const [search, setSearch] = useState("");
   const [calories, setCalories] = useState("");
+  const [category, setCategory] = useState<Category>("other");
 
   const ate = day.ate.filter((a) => a.meal === meal).map((a) => a.comestible);
 
   const found =
-    search.length === 0
+    search.trim().length === 0
       ? []
-      : state.comestibles
-          .filter(
-            (x) =>
-              !ate.includes(x.name) &&
-              search.toLowerCase().split(" ").every(part => 
-                x.name.toLowerCase().includes(part))
-          )
-          .map(x => ({
-            match: x,
-            score: search.toLowerCase() === x.name ? 1 : 0
-          }))
-          .sort((l, r) => r.score - l.score)
-          .map(x => x.match)
+      : searchComestibles(state.comestibles, search, x => ate.includes(x))
           .slice(0, 5);
 
   function reset() {
@@ -72,7 +61,8 @@ export const AddComestible = memo(({
               dispatch({
                 type: "ADD_COMESTIBLE",
                 name: search,
-                calories: parseFloat(calories)
+                calories: parseFloat(calories),
+                category
               });
               dispatch({
                 type: "ADD_ATE",
@@ -101,6 +91,9 @@ export const AddComestible = memo(({
             value={calories}
             onChange={(e) => setCalories(e.target.value)}
           />
+          <select className="category" value={category} onChange={e => setCategory(e.target.value as Category)}>
+              {categories.map(cat => <option key={cat}>{cat}</option>)}
+          </select>
           <button type="submit" disabled={(isNaN(parseFloat(calories)) || !search) && found.length === 0}>
             Add
           </button>

@@ -7,8 +7,9 @@ export interface DatePickerProps {
 }
 
 export const DatePicker = memo(({ value, dispatch }: DatePickerProps) => {
-  return (
+  return (    
     <div className="date-picker">
+      <button onClick={() => dispatch({ type: "DAY_BEFORE" })}>-1 day</button>
       <input
         type="date"
         value={value}
@@ -18,7 +19,8 @@ export const DatePicker = memo(({ value, dispatch }: DatePickerProps) => {
             date: e.target.value
           })
         }
-      />
+      />      
+      <button onClick={() => dispatch({ type: "DAY_AFTER" })}>+1 day</button>
       <button onClick={() => dispatch({ type: "TODAY" })}>today</button>
     </div>    
   );

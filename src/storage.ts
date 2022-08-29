@@ -1,5 +1,4 @@
-import { BlobServiceClient, RestError } from "@azure/storage-blob";
-import { config } from "process";
+import { BlobServiceClient } from "@azure/storage-blob";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { FatboyData } from "./data";
 import { FatboyAction, fatboyReducer } from "./reducer";
@@ -34,6 +33,7 @@ export function useSlimStorage() {
     const body = await fetchedBlob.blobBody;
     const json = await body!.text();
     const data = JSON.parse(json) as FatboyData;
+
     return { data, version };
   }
 
