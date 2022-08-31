@@ -1,170 +1,206 @@
-@import '../node_modules/react-vis/dist/style.css';
+@import "../node_modules/react-vis/dist/style.css";
 
 .App {
-  font-family: sans-serif;
-  font-size: 1.5em;
+    font-family: sans-serif;
+    font-size: 1.5em;
 }
 
 .over-the-limit {
-  color: hotpink;
+    color: hotpink;
 }
 
 .tabs {
-  display: flex;
-  flex-direction: row;
-  
-  .tab {
-    font-size: 1.5em;
-    margin: 0 1em 1em 0;
-    padding: 0 0 0.2em 0;
-    border-bottom: 3px solid transparent;
-    &.selected {
-      border-bottom: 3px solid teal;
-    }
-  }
-}
-
-.date-picker {
-  input, button {
-    font-size: 1.2em;
-    margin-right: 0.5em;
-  }
-}
-
-.calorie-bar {
-  margin-top: 1em;
-  border-radius: 0.5em;
-  background: burlywood;
-  position: relative;
-
-  .progress {
-    height: 1.2em;
-    background:pink;
-    border-radius: 0.5em;
-  }
-
-  .ate {
-    position: absolute;
-    left: 5px;
-    top: 0.1em;
-    color: white;
-  }
-
-  .remaining {
-    position: absolute;
-    right: 5px;
-    top: 0.1em;
-  }
-}
-
-.meal {
-  margin: 1em 0;
-  padding: 0.5em;
-  background: beige;
-  border-radius: 0.5em;
-  box-shadow: silver 5px 5px 5px;
-
-  .meal-heading {
     display: flex;
     flex-direction: row;
 
-    .title {
-      flex: 1 1 auto;
-      font-weight: bold;
+    .tab {
+        font-size: 1.5em;
+        margin: 0 1em 1em 0;
+        padding: 0 0 0.2em 0;
+        border-bottom: 3px solid transparent;
+        &.selected {
+            border-bottom: 3px solid teal;
+        }
     }
-    .calories {
-      font-style: italic;
-    }
-  }
-
-  .comestible {
-    margin: 0.5em;
-    background: cornflowerblue;
-    color: white;
-    padding: 0.3em;
-    border-radius: 0.5em;
-    display: inline-block;
-
-    .calories {
-      padding-right: 0.2em;
-      color: darkorange;
-    }
-
-    .quantity {
-      margin-left: 0.2em;
-      padding: 0 0.2em;
-      border-radius: 4px;
-      color: black;
-      cursor: pointer;
-      background: gold;
-    }
-
-    .delete {
-      font-size: 0.8em;
-      padding-left: 0.5em;
-      cursor: pointer;
-    }
-
-    &.addable {
-      opacity: 0.5;
-      cursor: pointer;
-    }
-  }
-
-  .add-comestible {
-    input, button {
-      font-size: 1em;
-      margin-right: 0.5em;
-    }
-
-    .calories {
-      width: 5em;
-    }
-  }
 }
 
-.stat-box {  
-  h3 {
-    font-weight: normal;
-    padding-bottom: 0.3em;
-    border-bottom: 1px solid silver;
-  }
+.date-picker {
+    input,
+    button {
+        font-size: 1.2em;
+        margin-right: 0.5em;
+    }
+}
 
-  .number-stat {
-    text-align: center;
-    display: inline-block;
-    margin-right: 1em;
-    background: #EEE;
-    padding: 1em;
+.calorie-bar {
+    margin-top: 1em;
     border-radius: 0.5em;
+    background: burlywood;
+    position: relative;
 
-    .big-number {
-      font-size: 2em;
+    .progress {
+        height: 1.2em;
+        background: pink;
+        border-radius: 0.5em;
     }
-    .little-label {
-      color: darkgray;
-    }
-  }
 
-  .tooltip {
-    background: black;
-    font-size: 0.8rem;
-    color: white;
+    .ate {
+        position: absolute;
+        left: 5px;
+        top: 0.1em;
+        color: white;
+    }
+
+    .remaining {
+        position: absolute;
+        right: 5px;
+        top: 0.1em;
+    }
+}
+
+.meal {
+    margin: 1em 0;
     padding: 0.5em;
+    background: beige;
     border-radius: 0.5em;
-  }
+    box-shadow: silver 5px 5px 5px;
+
+    .meal-heading {
+        display: flex;
+        flex-direction: row;
+
+        .title {
+            flex: 1 1 auto;
+            font-weight: bold;
+        }
+        .calories {
+            font-style: italic;
+        }
+    }
+
+    .comestible {
+        margin: 0.5em;
+        background: cornflowerblue;
+        color: white;
+        padding: 0.3em;
+        border-radius: 0.5em;
+        display: inline-block;
+
+        .calories {
+            padding-right: 0.2em;
+            color: darkorange;
+        }
+
+        .quantity {
+            margin-left: 0.2em;
+            padding: 0 0.2em;
+            border-radius: 4px;
+            color: black;
+            cursor: pointer;
+            background: gold;
+        }
+
+        .delete {
+            font-size: 0.8em;
+            padding-left: 0.5em;
+            cursor: pointer;
+        }
+
+        &.addable {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+    }
+
+    .add-comestible {
+        input,
+        button {
+            font-size: 1em;
+            margin-right: 0.5em;
+        }
+
+        .calories {
+            width: 5em;
+        }
+    }
+}
+
+.stat-box {
+    h3 {
+        font-weight: normal;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid silver;
+    }
+
+    .number-stat {
+        text-align: center;
+        display: inline-block;
+        margin-right: 1em;
+        background: #eee;
+        padding: 1em;
+        border-radius: 0.5em;
+
+        .big-number {
+            font-size: 2em;
+        }
+        .little-label {
+            color: darkgray;
+        }
+    }
+
+    .tooltip {
+        background: black;
+        font-size: 0.8rem;
+        color: white;
+        padding: 0.5em;
+        border-radius: 0.5em;
+    }
 }
 
 .config {
-  input {
-    font-size: 1.5em;
-  }
+    input {
+        font-size: 1.5em;
+    }
 
-  .comestible {
-    margin: 1em 0;
-    padding: 0.5em;
-    background: cornsilk;
-    border-radius: 0.5em;
-    box-shadow: silver 5px 5px 5px;
-  }
+    .comestible {
+        margin: 1em 0;
+        padding: 0.5em;
+        background: cornsilk;
+        border-radius: 0.5em;
+        box-shadow: silver 5px 5px 5px;
+
+        .calories,
+        .red-meat {
+            padding-left: 1em;
+            font-style: italic;
+            color: darkgrey;
+        }
+
+        &.red-meat {
+            background: pink;
+        }
+
+        label {
+            margin-right: 0.5em;
+        }
+
+        input,
+        button {
+            font-size: 1em;
+        }
+
+        .days {
+            margin-top: 1em;
+
+            .ate {
+                text-decoration: underline;
+                margin-right: 1em;
+                cursor: pointer;
+
+                &:hover {
+                    color: mediumslateblue;
+                }
+            }
+        }
+    }
 }

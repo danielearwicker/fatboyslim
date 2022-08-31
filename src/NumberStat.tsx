@@ -1,21 +1,16 @@
-import { categories, FatboyData, formatNumber, getComestibleMap, getDayFacts, getFacts, sum } from "./data";
+import { formatNumber } from "./data";
 import { chain as _ } from "underscore";
-import { StackedBar } from "./StackedBar";
 
 export interface NumberStatProps {
-  value: number;
-  label: string;
-} 
+    value: number;
+    label: string;
+}
 
 export function NumberStat({ value, label }: NumberStatProps) {
-  return (
-    <div className="number-stat">
-        <div className="big-number">
-          {formatNumber(value)}
+    return (
+        <div className="number-stat">
+            <div className="big-number">{formatNumber(value)}</div>
+            <div className="little-label">{label}</div>
         </div>
-        <div className="little-label">
-          {label}
-        </div>
-      </div>
-  );
+    );
 }
