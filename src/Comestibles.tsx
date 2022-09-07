@@ -20,6 +20,8 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
 
     if (sort === "alpha") {
         sorted.sort((l, r) => l.name.localeCompare(r.name));
+    } else if (sort === "calories") {
+        sorted.sort((l, r) => r.calories - l.calories);
     } else if (sort === "latest") {
         sorted.reverse();
     }
@@ -37,8 +39,9 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                 onChange={e => setSearch(e.target.value)}
             />
             <select value={sort} onChange={e => setSort(e.target.value)}>
-                <option value="alpha">Sort alphabetical</option>
+                <option value="alpha">Sort alphabetically</option>
                 <option value="latest">Sort latest first</option>
+                <option value="calories">Sort by calories</option>
             </select>
             {filtered.map(c => (
                 <div
