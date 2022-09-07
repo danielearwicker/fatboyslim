@@ -1,7 +1,8 @@
 import { BlobServiceClient } from "@azure/storage-blob";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { MethodCallAction, useMethodReducer } from "./useMethodReducer";
 import { FatboyData } from "./data";
-import { FatboyAction, fatboyReducer } from "./reducer";
+import { FatboyDispatch, fatboyMethods } from "./fatboyMethods";
 import "./styles.scss";
 
 export interface VersionedFatboyData {
@@ -18,10 +19,14 @@ const initialState: FatboyData = {
 const localKey = "fatboyslim-cs";
 
 export function useSlimStorage() {
-    const [state, dispatchWithoutSave] = useReducer(
-        fatboyReducer,
+    const queuedActions = useRef<MethodCallAction[]>([]);
+
+    const [state, dispatchWithoutSave, dispatchRaw] = useMethodReducer(
+        "fatboy",
+        fatboyMethods,
         initialState
     );
+
     const [version, setVersion] = useState("none");
     const [sasToken, setSasToken] = useState(
         localStorage.getItem(localKey) ?? ""
@@ -34,7 +39,7 @@ export function useSlimStorage() {
             `https://drefatboyslim.blob.core.windows.net?${sasToken}`
         );
         const container = client.getContainerClient("data");
-        const remoteBlob = container.getBlockBlobClient("everything");
+        const remoteBlob = container.getBlockBlobClient("test1");
         const fetchedBlob = await remoteBlob.download();
         const version = fetchedBlob.etag!;
         const body = await fetchedBlob.blobBody;
@@ -49,7 +54,7 @@ export function useSlimStorage() {
             `https://drefatboyslim.blob.core.windows.net?${sasToken}`
         );
         const container = client.getContainerClient("data");
-        const remoteBlob = container.getBlockBlobClient("everything");
+        const remoteBlob = container.getBlockBlobClient("test1");
 
         const blob = new Blob([JSON.stringify(versioned.data)], {
             type: "text/json",
@@ -69,7 +74,7 @@ export function useSlimStorage() {
         async function load() {
             try {
                 const loaded = await loadBlob();
-                dispatchWithoutSave({ type: "LOAD", config: loaded.data });
+                dispatchWithoutSave(x => x.load(loaded.data));
                 console.log("Loaded version", loaded.version);
                 setVersion(loaded.version);
             } catch (e) {
@@ -84,7 +89,6 @@ export function useSlimStorage() {
     }, []);
 
     const saveTimer = useRef<number | undefined>();
-    const queuedActions = useRef<FatboyAction[]>([]);
 
     function saveSoon() {
         if (saveTimer.current !== undefined) {
@@ -109,14 +113,14 @@ export function useSlimStorage() {
                 );
 
                 const loaded = await loadBlob();
-                dispatchWithoutSave({ type: "LOAD", config: loaded.data });
+                dispatchWithoutSave(x => x.load(loaded.data));
 
                 console.log("Loaded version", loaded.version);
                 setVersion(loaded.version);
 
                 for (const action of queuedActions.current) {
                     console.log("Reapplying", action);
-                    dispatchWithoutSave(action);
+                    dispatchRaw(action);
                 }
 
                 saveSoon();
@@ -128,6 +132,13 @@ export function useSlimStorage() {
             reconcile();
         }
     }, [shouldSave, state]);
+
+    const dispatch: FatboyDispatch = action => {
+        const rawActions = dispatchWithoutSave(action);
+        queuedActions.current.push(...rawActions);
+        saveSoon();
+        return rawActions;
+    };
 
     return {
         state,
@@ -141,12 +152,7 @@ export function useSlimStorage() {
             setSasToken(token);
         },
 
-        dispatch(action: FatboyAction) {
-            queuedActions.current.push(action);
-            dispatchWithoutSave(action);
-
-            saveSoon();
-        },
+        dispatch,
     };
 }
 

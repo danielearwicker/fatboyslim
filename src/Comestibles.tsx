@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { categories, Category, FatboyData, searchComestibles } from "./data";
-import { FatboyAction } from "./reducer";
 import { chain as _ } from "underscore";
+import { FatboyDispatch } from "./fatboyMethods";
 
 export interface ConfigProps {
     state: FatboyData;
-    dispatch: React.Dispatch<FatboyAction>;
+    dispatch: FatboyDispatch;
     showEditingDay(): void;
 }
 
@@ -57,11 +57,12 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                         className="category"
                         value={c.category}
                         onChange={e =>
-                            dispatch({
-                                type: "SET_CATEGORY",
-                                comestible: c.name,
-                                category: e.target.value as Category,
-                            })
+                            dispatch(x =>
+                                x.setCategory(
+                                    e.target.value as Category,
+                                    c.name
+                                )
+                            )
                         }>
                         {categories.map(cat => (
                             <option key={cat}>{cat}</option>
@@ -106,12 +107,13 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                         isNaN(parseFloat(redMeat))
                                     }
                                     onClick={() => {
-                                        dispatch({
-                                            type: "CONFIGURE_COMESTIBLE",
-                                            comestible: c.name,
-                                            calories: parseFloat(calories),
-                                            redMeat: parseFloat(redMeat),
-                                        });
+                                        dispatch(x =>
+                                            x.configureComestible(
+                                                c.name,
+                                                parseFloat(calories),
+                                                parseFloat(redMeat)
+                                            )
+                                        );
                                         setEditing("");
                                     }}>
                                     Save
@@ -134,10 +136,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                 <span
                                     className="ate"
                                     onClick={() => {
-                                        dispatch({
-                                            type: "SET_EDITING_DATE",
-                                            date: x.date,
-                                        });
+                                        dispatch(d => d.setEditingDate(x.date));
                                         showEditingDay();
                                     }}>
                                     {x.date}

@@ -1,12 +1,12 @@
-import React, { memo, useState } from "react";
+import { memo, useState } from "react";
 import { Day, FatboyData, Meal, searchComestibles } from "./data";
-import { FatboyAction } from "./reducer";
+import { FatboyDispatch } from "./fatboyMethods";
 
 export type AddComestibleProps = Readonly<{
     day: Day;
     meal: Meal;
     state: FatboyData;
-    dispatch: React.Dispatch<FatboyAction>;
+    dispatch: FatboyDispatch;
 }>;
 
 export const AddComestible = memo(
@@ -39,11 +39,7 @@ export const AddComestible = memo(
                     <div
                         className="comestible addable"
                         onClick={() => {
-                            dispatch({
-                                type: "ADD_ATE",
-                                meal,
-                                comestible: c.name,
-                            });
+                            dispatch(d => d.addAte(meal, c.name));
                             reset();
                         }}>
                         <span className="calories">{c.calories}</span>
@@ -56,25 +52,18 @@ export const AddComestible = memo(
                             e.preventDefault();
                             const caloriesNumber = parseFloat(calories);
                             if (!isNaN(caloriesNumber) && !!search) {
-                                dispatch({
-                                    type: "ADD_COMESTIBLE",
-                                    name: search,
-                                    calories: parseFloat(calories),
-                                    category: "other",
-                                    redMeat: 0,
-                                });
-                                dispatch({
-                                    type: "ADD_ATE",
-                                    meal,
-                                    comestible: search,
-                                });
+                                dispatch(e =>
+                                    e.addComestible(
+                                        search,
+                                        parseFloat(calories),
+                                        "other",
+                                        0
+                                    )
+                                );
+                                dispatch(e => e.addAte(meal, search));
                                 reset();
                             } else if (found.length > 0) {
-                                dispatch({
-                                    type: "ADD_ATE",
-                                    meal,
-                                    comestible: found[0].name,
-                                });
+                                dispatch(e => e.addAte(meal, found[0].name));
                                 reset();
                             }
                         }}>

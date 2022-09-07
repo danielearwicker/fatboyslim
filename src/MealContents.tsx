@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Meal } from "./data";
-import { FatboyAction } from "./reducer";
+import { FatboyDispatch } from "./fatboyMethods";
 
 export interface MealProps {
     meal: Meal;
@@ -8,7 +8,7 @@ export interface MealProps {
     stats: {
         caloriesAverage: number;
     };
-    dispatch: React.Dispatch<FatboyAction>;
+    dispatch: FatboyDispatch;
     children: ReactNode;
 }
 
@@ -41,22 +41,14 @@ export const MealContents = ({
                         <span
                             className="quantity"
                             onClick={() => {
-                                dispatch({
-                                    type: "ADD_ATE",
-                                    meal,
-                                    comestible: c.name,
-                                });
+                                dispatch(e => e.addAte(meal, c.name));
                             }}>
                             {c.quantity > 1 ? `x${c.quantity}` : "+"}
                         </span>
                         <span
                             className="delete"
                             onClick={() =>
-                                dispatch({
-                                    type: "DELETE_ATE",
-                                    meal,
-                                    comestible: c.name,
-                                })
+                                dispatch(d => d.deleteAte(meal, c.name))
                             }>
                             🗑
                         </span>

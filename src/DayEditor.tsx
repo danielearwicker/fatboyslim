@@ -4,12 +4,12 @@ import { FatboyData, getComestibleMap, getFacts, meals, sum } from "./data";
 import { DatePicker } from "./DatePicker";
 import { MealContents } from "./MealContents";
 import { ProgressBar } from "./ProgressBar";
-import { FatboyAction } from "./reducer";
 import { chain as _ } from "underscore";
+import { FatboyDispatch } from "./fatboyMethods";
 
 export interface DayEditorProps {
     state: FatboyData;
-    dispatch: React.Dispatch<FatboyAction>;
+    dispatch: FatboyDispatch;
 }
 
 export function DayEditor({ state, dispatch }: DayEditorProps) {
