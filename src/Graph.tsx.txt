@@ -1,0 +1,289 @@
+import { disableResponseDecompressionPolicy } from "@azure/core-http";
+import { useEffect, useMemo, useState } from "react";
+import { FatboyData, meals } from "./data";
+
+export interface GraphProps {
+    state: FatboyData;
+}
+
+function getOrAdd<T>(obj: { [key: string]: T }, key: string, defaultValue: T) {
+    return obj[key] ?? (obj[key] = defaultValue);
+}
+
+function increment(obj: { [key: string]: number }, key: string) {
+    obj[key] = (obj[key] ?? 0) + 1;
+}
+
+interface Vector {
+    x: number;
+    y: number;
+}
+
+interface Vertex {
+    pos: Vector;
+    vel: Vector;
+}
+
+function distance(v1: Vector, v2: Vector) {
+    const dx = v1.x - v2.x,
+        dy = v1.y - v2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function direction(v1: Vector, v2: Vector) {
+    const d = distance(v1, v2);
+    return { x: (v2.x - v1.x) / d, y: (v2.y - v1.y) / d };
+}
+
+function limitAbs(val: number, max: number) {
+    return val >= 0 ? Math.min(val, max) : Math.max(val, -max);
+}
+
+interface Vertices {
+    [comestible: string]: Vertex;
+}
+
+function orderPair(c1: string, c2: string) {
+    return c1.localeCompare(c2) > 0 ? [c2, c1] : [c1, c2];
+}
+
+export function Graph({ state }: GraphProps) {
+    const [comestibles, edges] = useMemo(() => {
+        const edges: {
+            [c1c2: string]: {
+                c1: string;
+                c2: string;
+                weight: number;
+            };
+        } = {};
+
+        const comestibles: {
+            [comestible: string]: number;
+        } = {};
+
+        for (const day of state.days) {
+            for (const meal of meals) {
+                const ate = day.ate.filter(x => x.meal === meal);
+                for (const a of ate) {
+                    increment(comestibles, a.comestible);
+                }
+                for (let x = 0; x < ate.length - 1; x++) {
+                    for (let y = x + 1; y < ate.length; y++) {
+                        const [c1, c2] = orderPair(
+                            ate[x].comestible,
+                            ate[y].comestible
+                        );
+                        const key = `${c1}:${c2}`;
+                        const edge = getOrAdd(edges, key, {
+                            c1,
+                            c2,
+                            weight: 0,
+                        });
+                        edge.weight++;
+                    }
+                }
+            }
+        }
+
+        console.log(comestibles, Object.values(edges));
+
+        return [comestibles, Object.values(edges)];
+    }, [state]);
+
+    function randomPositions() {
+        return Object.fromEntries(
+            Object.entries(comestibles).map(([c, _]) => [
+                c,
+                {
+                    pos: {
+                        x: 800 + (Math.random() - 0.5) * 1200,
+                        y: 400 + (Math.random() - 0.5) * 800,
+                    },
+                    vel: { x: 0, y: 0 },
+                },
+            ])
+        );
+    }
+
+    const [vertices, setVertices] = useState<Vertices>(randomPositions());
+
+    useEffect(() => {
+        let quit = false;
+
+        function step() {
+            setVertices(oldVertices => {
+                const entries = Object.entries(oldVertices);
+
+                const forces: { [comestible: string]: Vector } = {};
+
+                function applyForce(comestible: string, x: number, y: number) {
+                    const f = getOrAdd(forces, comestible, { x: 0, y: 0 });
+                    f.x += x;
+                    f.y += y;
+                }
+
+                const centre = { x: 800, y: 400 };
+
+                for (let a = 0; a < entries.length; a++) {
+                    const [aName, aVertex] = entries[a];
+
+                    const homesickness = distance(aVertex.pos, centre);
+                    const unit = direction(aVertex.pos, centre);
+
+                    const fx = (unit.x * homesickness) / 10,
+                        fy = (unit.y * homesickness) / 10;
+
+                    applyForce(aName, fx, fy);
+                }
+
+                for (let a = 0; a < entries.length - 1; a++) {
+                    for (let b = a + 1; b < entries.length; b++) {
+                        const [aName, aVertex] = entries[a],
+                            [bName, bVertex] = entries[b];
+
+                        const encroachment = Math.max(
+                            80 - distance(aVertex.pos, bVertex.pos),
+                            0
+                        );
+
+                        if (encroachment > 0) {
+                            const unit = direction(aVertex.pos, bVertex.pos);
+
+                            const fx =
+                                    (unit.x * encroachment * encroachment) / 10,
+                                fy =
+                                    (unit.y * encroachment * encroachment) / 10;
+
+                            applyForce(aName, -fx, -fy);
+                            applyForce(bName, +fx, +fy);
+                        }
+                    }
+                }
+
+                for (const edge of edges) {
+                    const v1 = oldVertices[edge.c1],
+                        v2 = oldVertices[edge.c2],
+                        o1 = comestibles[edge.c1],
+                        o2 = comestibles[edge.c2];
+
+                    const estrangement = Math.max(
+                        distance(v1.pos, v2.pos) * (edge.weight / (o1 * o2)),
+                        0
+                    );
+
+                    if (estrangement > 0) {
+                        const unit = direction(v1.pos, v2.pos);
+
+                        const fx =
+                            unit.x * ((estrangement * estrangement) / 20);
+                        const fy =
+                            unit.y * ((estrangement * estrangement) / 20);
+
+                        applyForce(edge.c1, fx, fy);
+                        applyForce(edge.c2, -fx, -fy);
+                    }
+                }
+
+                const newVertices: Vertices = {};
+
+                for (const [comestible, vertex] of entries) {
+                    const vx = limitAbs(
+                            vertex.vel.x + (forces[comestible]?.x ?? 0),
+                            1000
+                        ),
+                        vy = limitAbs(
+                            vertex.vel.y + (forces[comestible]?.y ?? 0),
+                            1000
+                        );
+
+                    newVertices[comestible] = {
+                        pos: {
+                            x: Math.min(
+                                1500,
+                                Math.max(0, vertex.pos.x + vx / 100)
+                            ),
+                            y: Math.min(
+                                800,
+                                Math.max(0, vertex.pos.y + vy / 100)
+                            ),
+                        },
+                        vel: {
+                            x: vx * 0.999,
+                            y: vy * 0.999,
+                        },
+                    };
+                }
+
+                return newVertices;
+            });
+
+            if (!quit) {
+                requestAnimationFrame(step);
+            }
+        }
+
+        step();
+
+        return () => {
+            quit = true;
+        };
+    }, []);
+
+    return (
+        <>
+            <button onClick={() => setVertices(randomPositions())}>
+                Randomize
+            </button>
+            <svg width="1500" height="800" scale={0.5}>
+                {edges.map(e => {
+                    const c1 = vertices[e.c1],
+                        c2 = vertices[e.c2];
+                    if (
+                        isNaN(c1.pos.x) ||
+                        isNaN(c1.pos.y) ||
+                        isNaN(c2.pos.y) ||
+                        isNaN(c2.pos.y)
+                    ) {
+                        return null;
+                    }
+                    return (
+                        <line
+                            key={e.c1 + ":" + e.c2}
+                            x1={c1.pos.x}
+                            y1={c1.pos.y}
+                            x2={c2.pos.x}
+                            y2={c2.pos.y}
+                            stroke="#99CCFF"
+                            strokeWidth={e.weight}
+                            strokeOpacity={0.2}
+                        />
+                    );
+                })}
+                {Object.entries(vertices).map(([k, v]) =>
+                    isNaN(v.pos.x) || isNaN(v.pos.y) ? undefined : (
+                        <>
+                            <circle
+                                key={`circle-${k}`}
+                                cx={v.pos.x}
+                                cy={v.pos.y}
+                                r={25}
+                                stroke="#AADDFF"
+                                strokeWidth={1}
+                                fill="#CCEEFF"
+                                fillOpacity={0.7}
+                            />
+                            <text
+                                key={`text-${k}`}
+                                x={v.pos.x}
+                                y={v.pos.y}
+                                fontSize="0.25em"
+                                textAnchor="middle">
+                                {k.substring(0, 15)}
+                            </text>
+                        </>
+                    )
+                )}
+            </svg>
+        </>
+    );
+}

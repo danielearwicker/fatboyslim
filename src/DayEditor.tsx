@@ -67,6 +67,7 @@ export function DayEditor({ state, dispatch }: DayEditorProps) {
                         <AddComestible
                             day={day}
                             meal={m.meal}
+                            comestibles={comestibles}
                             state={state}
                             dispatch={dispatch}
                         />

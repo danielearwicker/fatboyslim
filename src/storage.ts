@@ -10,6 +10,7 @@ export interface VersionedFatboyData {
 }
 
 const initialState: FatboyData = {
+    measurements: [],
     comestibles: [],
     days: [],
     editingDay: "2022-08-27",
@@ -29,33 +30,30 @@ export function useSlimStorage() {
     const shouldLoad = useRef(true);
     const [shouldSave, setShouldSave] = useState(false);
 
-    async function loadBlob(): Promise<VersionedFatboyData> {
+    function getBlob() {
         const client = new BlobServiceClient(
             `https://drefatboyslim.blob.core.windows.net?${sasToken}`
         );
         const container = client.getContainerClient("data");
-        const remoteBlob = container.getBlockBlobClient("everything");
-        const fetchedBlob = await remoteBlob.download();
+        return container.getBlockBlobClient("everything");
+    }
+
+    async function loadBlob(): Promise<VersionedFatboyData> {
+        const fetchedBlob = await getBlob().download();
         const version = fetchedBlob.etag!;
         const body = await fetchedBlob.blobBody;
         const json = await body!.text();
-        const data = JSON.parse(json) as FatboyData;
+        const data = JSON.parse(json);
 
-        return { data, version };
+        return { data: data as FatboyData, version };
     }
 
     async function saveBlob(versioned: VersionedFatboyData) {
-        const client = new BlobServiceClient(
-            `https://drefatboyslim.blob.core.windows.net?${sasToken}`
-        );
-        const container = client.getContainerClient("data");
-        const remoteBlob = container.getBlockBlobClient("everything");
-
         const blob = new Blob([JSON.stringify(versioned.data)], {
             type: "text/json",
         });
 
-        const result = await remoteBlob.uploadData(blob, {
+        const result = await getBlob().uploadData(blob, {
             conditions: {
                 ifMatch: versioned.version,
             },

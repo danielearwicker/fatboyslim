@@ -1,5 +1,12 @@
 import produce from "immer";
-import { addDays, Category, FatboyData, Meal, today } from "./data";
+import {
+    addDays,
+    Category,
+    FatboyData,
+    Meal,
+    MeasurementType,
+    today,
+} from "./data";
 
 export type FatboyAction =
     | {
@@ -46,6 +53,11 @@ export type FatboyAction =
           comestible: string;
           calories: number;
           redMeat: number;
+      }
+    | {
+          type: "ADD_MEASUREMENT";
+          measurementType: MeasurementType;
+          value: number;
       };
 
 export function fatboyReducer(data: FatboyData, action: FatboyAction) {
@@ -150,6 +162,21 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                 if (c) {
                     c.calories = action.calories;
                     c.redMeat = action.redMeat;
+                }
+            });
+        case "ADD_MEASUREMENT":
+            return produce(data, draft => {
+                const existing = draft.measurements.find(
+                    x => x.date === draft.editingDay && x.value === action.value
+                );
+                if (existing) {
+                    existing.value = action.value;
+                } else {
+                    draft.measurements.push({
+                        type: action.measurementType,
+                        value: action.value,
+                        date: draft.editingDay,
+                    });
                 }
             });
     }

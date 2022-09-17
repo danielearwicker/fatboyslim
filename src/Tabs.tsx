@@ -1,4 +1,5 @@
 import { memo, useState } from "react";
+import { Body } from "./Body";
 import { Comestibles } from "./Comestibles";
 import { DayEditor } from "./DayEditor";
 import { Stats } from "./Stats";
@@ -8,7 +9,7 @@ export interface TabsProps {
     storage: SlimStorage;
 }
 
-const tabs = ["day", "stats", "comestibles"] as const;
+const tabs = ["day", "stats", "comestibles", "body", "graph"] as const;
 type Tab = typeof tabs[number];
 
 export const Tabs = memo(({ storage }: TabsProps) => {
@@ -38,6 +39,8 @@ export const Tabs = memo(({ storage }: TabsProps) => {
                     dispatch={dispatch}
                     showEditingDay={() => setTab("day")}
                 />
+            ) : tab === "body" ? (
+                <Body state={state} dispatch={dispatch} />
             ) : undefined}
         </div>
     );

@@ -1,27 +1,93 @@
-import React, { memo, useState } from "react";
-import { Day, FatboyData, Meal, searchComestibles } from "./data";
+import React, { memo, useMemo, useState } from "react";
+import { Comestible, Day, FatboyData, Meal, searchComestibles } from "./data";
 import { FatboyAction } from "./reducer";
 
 export type AddComestibleProps = Readonly<{
     day: Day;
     meal: Meal;
+    comestibles: Record<string, Comestible>;
     state: FatboyData;
     dispatch: React.Dispatch<FatboyAction>;
 }>;
 
+function increment(obj: { [key: string]: number }, key: string, by: number) {
+    obj[key] = (obj[key] ?? 0) + by;
+}
+
+export function mostOftenEatenWith(
+    days: readonly Day[],
+    meal: Meal,
+    ate: string[]
+) {
+    const occurrences: { [comestible: string]: number } = {};
+
+    for (const d of days) {
+        for (const a of d.ate) {
+            if (a.meal === meal) {
+                increment(occurrences, a.comestible, 1);
+            }
+        }
+    }
+
+    // So occurrences[c] / days.length tells you on what proportion
+    // of all days this meal includes c. Reciprocal of that is the
+    // rarity of a meal, which boosts its significance as a match.
+
+    const popular: { [comestible: string]: number } = {};
+
+    const ateSet = Object.fromEntries(ate.map(a => [a, true]));
+
+    for (const d of days) {
+        let score = 0.001;
+
+        for (const a of d.ate) {
+            if (a.meal === meal) {
+                if (ateSet[a.comestible]) {
+                    score += days.length / occurrences[a.comestible];
+                }
+            }
+        }
+
+        for (const a of d.ate) {
+            if (a.meal === meal && !ateSet[a.comestible]) {
+                increment(popular, a.comestible, score);
+            }
+        }
+    }
+
+    const entries = Object.entries(popular);
+    entries.sort((l, r) => r[1] - l[1]);
+    const result = entries.map(x => x[0]);
+
+    for (const r of result.slice(0, 5)) {
+        console.log(r, popular[r]);
+    }
+
+    return result;
+}
+
 export const AddComestible = memo(
-    ({ day, meal, state, dispatch }: AddComestibleProps) => {
+    ({ day, meal, comestibles, state, dispatch }: AddComestibleProps) => {
         const [search, setSearch] = useState("");
         const [calories, setCalories] = useState("");
 
-        const ate = day.ate.filter(a => a.meal === meal).map(a => a.comestible);
+        const ate = useMemo(
+            () => day.ate.filter(a => a.meal === meal).map(a => a.comestible),
+            [day.ate]
+        );
 
-        const found =
-            search.trim().length === 0
-                ? []
-                : searchComestibles(state.comestibles, search, x =>
+        const mealChoices = useMemo(
+            () => mostOftenEatenWith(state.days, meal, ate),
+            [state.days, meal, ate]
+        );
+
+        const found = (
+            search.trim().length > 0
+                ? searchComestibles(state.comestibles, search, x =>
                       ate.includes(x)
-                  ).slice(0, 5);
+                  )
+                : mealChoices.map(x => comestibles[x])
+        ).slice(0, 10);
 
         function reset() {
             setSearch("");

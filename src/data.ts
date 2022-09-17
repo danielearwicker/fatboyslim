@@ -56,6 +56,10 @@ export type Ate = Readonly<{
 }>;
 
 export function isoDate(d: Date) {
+    if (typeof d === "number") {
+        const s = `${d}`;
+        return `${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6)}`;
+    }
     return d.toISOString().substring(0, 10);
 }
 
@@ -74,7 +78,18 @@ export type Day = Readonly<{
     ate: Ate[];
 }>;
 
+export const measurementTypes = ["Waist/cm", "Weight/kg"] as const;
+
+export type MeasurementType = typeof measurementTypes[number];
+
+export interface Measurement {
+    value: number;
+    date: string;
+    type: MeasurementType;
+}
+
 export type FatboyData = Readonly<{
+    measurements: Measurement[];
     comestibles: readonly Comestible[];
     days: readonly Day[];
     editingDay: string;
