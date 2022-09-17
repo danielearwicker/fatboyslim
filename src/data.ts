@@ -1,3 +1,4 @@
+import { last } from "underscore";
 import "./styles.scss";
 
 export const categories = [
@@ -23,26 +24,82 @@ export type Comestible = Readonly<{
     redMeat: number;
 }>;
 
+export function probabilityOfAGivenB<T>(
+    items: readonly Readonly<T>[],
+    classify: (item: Readonly<T>) => { a: boolean; b: boolean }
+) {
+    let countOnlyA = 0,
+        countOnlyB = 0,
+        countBoth = 0;
+
+    for (const item of items) {
+        const { a, b } = classify(item);
+        if (a && b) {
+            countBoth++;
+        } else if (a) {
+            countOnlyA++;
+        } else if (b) {
+            countOnlyB++;
+        }
+    }
+
+    const probA = (countOnlyA + countBoth) / items.length;
+    const probB = (countOnlyB + countBoth) / items.length;
+    const probBGivenA =
+        countBoth === 0 ? 0 : countBoth / (countBoth + countOnlyA);
+    return probB === 0 ? 0 : probA * (probBGivenA / probB);
+}
+
+function commonSuffix(a: string, b: string) {
+    let n = 0;
+    while (n < a.length && n < b.length && a[n] === b[n]) {
+        n++;
+    }
+    return n;
+}
+
+function getParts(str: string) {
+    return str
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(" ");
+}
+
+function compareStrings(a: string, b: string) {
+    const aParts = getParts(a);
+    const bParts = getParts(b);
+
+    let matches = 0;
+
+    for (const aPart of aParts) {
+        for (const bPart of bParts) {
+            matches += commonSuffix(aPart, bPart);
+        }
+    }
+
+    return matches;
+}
+
 export function searchComestibles(
     comestibles: readonly Comestible[],
-    search: string,
-    exclude: (c: string) => boolean
+    search: string
 ) {
-    return comestibles
-        .filter(
-            x =>
-                !exclude(x.name) &&
-                search
-                    .toLowerCase()
-                    .split(" ")
-                    .every(part => x.name.toLowerCase().includes(part))
-        )
-        .map(x => ({
-            match: x,
-            score: search.toLowerCase() === x.name ? 1 : 0,
+    const found = comestibles
+        .map(comestible => ({
+            comestible,
+            score: compareStrings(comestible.name, search),
         }))
-        .sort((l, r) => r.score - l.score)
-        .map(x => x.match);
+        .filter(x => x.score > 0);
+
+    const total = found.map(x => x.score).reduce((l, r) => l + r, 0);
+
+    const scaled = found.map(x => ({
+        ...x,
+        probability: x.score / total,
+    }));
+
+    scaled.sort((l, r) => r.probability - l.probability);
+    return scaled;
 }
 
 export const meals = ["breakfast", "lunch", "tea", "pud"] as const;

@@ -86,9 +86,19 @@
         border-radius: 0.5em;
         display: inline-block;
 
+        > * {
+            vertical-align: middle;
+        }
+
         .calories {
             padding-right: 0.2em;
             color: darkorange;
+        }
+
+        .probability {
+            padding-left: 0.3em;
+            font-size: 0.6em;
+            color: cyan;
         }
 
         .quantity {

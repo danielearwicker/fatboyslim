@@ -29,7 +29,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     const filtered =
         search.trim().length === 0
             ? sorted
-            : searchComestibles(sorted, search, x => false);
+            : searchComestibles(sorted, search).map(x => x.comestible);
 
     return (
         <div className="config">

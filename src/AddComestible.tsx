@@ -1,73 +1,46 @@
 import React, { memo, useMemo, useState } from "react";
-import { Comestible, Day, FatboyData, Meal, searchComestibles } from "./data";
+import {
+    Day,
+    FatboyData,
+    Meal,
+    probabilityOfAGivenB,
+    searchComestibles,
+} from "./data";
 import { FatboyAction } from "./reducer";
 
 export type AddComestibleProps = Readonly<{
     day: Day;
     meal: Meal;
-    comestibles: Record<string, Comestible>;
     state: FatboyData;
     dispatch: React.Dispatch<FatboyAction>;
 }>;
 
-function increment(obj: { [key: string]: number }, key: string, by: number) {
-    obj[key] = (obj[key] ?? 0) + by;
-}
-
 export function mostOftenEatenWith(
-    days: readonly Day[],
+    state: FatboyData,
     meal: Meal,
     ate: string[]
 ) {
-    const occurrences: { [comestible: string]: number } = {};
+    const candidates = state.comestibles
+        .filter(x => !ate.includes(x.name))
+        .map(comestible => ({
+            comestible,
+            probability: probabilityOfAGivenB(state.days, day => ({
+                a: day.ate.some(
+                    x => x.comestible === comestible.name && x.meal === meal
+                ),
+                b: ate.every(y =>
+                    day.ate.some(x => x.comestible === y && x.meal === meal)
+                ),
+            })),
+        }));
 
-    for (const d of days) {
-        for (const a of d.ate) {
-            if (a.meal === meal) {
-                increment(occurrences, a.comestible, 1);
-            }
-        }
-    }
+    candidates.sort((l, r) => r.probability - l.probability);
 
-    // So occurrences[c] / days.length tells you on what proportion
-    // of all days this meal includes c. Reciprocal of that is the
-    // rarity of a meal, which boosts its significance as a match.
-
-    const popular: { [comestible: string]: number } = {};
-
-    const ateSet = Object.fromEntries(ate.map(a => [a, true]));
-
-    for (const d of days) {
-        let score = 0.001;
-
-        for (const a of d.ate) {
-            if (a.meal === meal) {
-                if (ateSet[a.comestible]) {
-                    score += days.length / occurrences[a.comestible];
-                }
-            }
-        }
-
-        for (const a of d.ate) {
-            if (a.meal === meal && !ateSet[a.comestible]) {
-                increment(popular, a.comestible, score);
-            }
-        }
-    }
-
-    const entries = Object.entries(popular);
-    entries.sort((l, r) => r[1] - l[1]);
-    const result = entries.map(x => x[0]);
-
-    for (const r of result.slice(0, 5)) {
-        console.log(r, popular[r]);
-    }
-
-    return result;
+    return candidates.filter(x => x.probability > 0);
 }
 
 export const AddComestible = memo(
-    ({ day, meal, comestibles, state, dispatch }: AddComestibleProps) => {
+    ({ day, meal, state, dispatch }: AddComestibleProps) => {
         const [search, setSearch] = useState("");
         const [calories, setCalories] = useState("");
 
@@ -77,16 +50,17 @@ export const AddComestible = memo(
         );
 
         const mealChoices = useMemo(
-            () => mostOftenEatenWith(state.days, meal, ate),
-            [state.days, meal, ate]
+            () => mostOftenEatenWith(state, meal, ate),
+            [state, meal, ate]
         );
 
         const found = (
             search.trim().length > 0
-                ? searchComestibles(state.comestibles, search, x =>
-                      ate.includes(x)
+                ? searchComestibles(
+                      state.comestibles.filter(x => !ate.includes(x.name)),
+                      search
                   )
-                : mealChoices.map(x => comestibles[x])
+                : mealChoices
         ).slice(0, 10);
 
         function reset() {
@@ -108,12 +82,19 @@ export const AddComestible = memo(
                             dispatch({
                                 type: "ADD_ATE",
                                 meal,
-                                comestible: c.name,
+                                comestible: c.comestible.name,
                             });
                             reset();
                         }}>
-                        <span className="calories">{c.calories}</span>
-                        <span className="name">{c.name}</span>
+                        <span className="calories">
+                            {c.comestible.calories}
+                        </span>
+                        <span className="name">{c.comestible.name}</span>
+                        {!!c.probability && (
+                            <span className="probability">
+                                {(c.probability * 100).toFixed(0)}%
+                            </span>
+                        )}
                     </div>
                 ))}
                 <div className={`add-comestible ${meal}`}>
@@ -139,7 +120,7 @@ export const AddComestible = memo(
                                 dispatch({
                                     type: "ADD_ATE",
                                     meal,
-                                    comestible: found[0].name,
+                                    comestible: found[0].comestible.name,
                                 });
                                 reset();
                             }
