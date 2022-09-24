@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { Comestible } from "./data";
+import { Comestible, formatNumber } from "./data";
 import "./styles.scss";
 
 const dailyLimit = 1800;
@@ -27,8 +27,8 @@ export const ProgressBar = memo(({ ate }: ProgressBarProps) => {
     ) : (
         <div className="calorie-bar">
             <div className="progress" style={{ width: `${progress}%` }} />
-            <div className="ate">{total}</div>
-            <div className="remaining">{dailyLimit - total}</div>
+            <div className="ate">{formatNumber(total)}</div>
+            <div className="remaining">{formatNumber(dailyLimit - total)}</div>
         </div>
     );
 });

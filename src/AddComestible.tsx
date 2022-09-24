@@ -1,5 +1,8 @@
 import React, { memo, useMemo, useState } from "react";
 import {
+    addDays,
+    Comestible,
+    dateDiff,
     Day,
     FatboyData,
     Meal,
@@ -18,9 +21,58 @@ export type AddComestibleProps = Readonly<{
 export function mostOftenEatenWith(
     state: FatboyData,
     meal: Meal,
-    ate: string[]
+    ate: string[],
+    day: string
 ) {
-    const candidates = state.comestibles
+    const lastConsumed: Record<string, string[]> = {};
+
+    for (const d of state.days) {
+        for (const a of d.ate) {
+            if (a.meal === meal) {
+                const lc =
+                    lastConsumed[a.comestible] ??
+                    (lastConsumed[a.comestible] = []);
+                if (lc.length === 10) {
+                    lc.shift();
+                }
+                lc.push(d.date);
+            }
+        }
+    }
+
+    const frequencies: { comestible: Comestible; hits: number }[] = [];
+
+    for (const [comestible, lc] of Object.entries(lastConsumed)) {
+        let hits = 0;
+        if (lc.length > 1) {
+            const last = lc.length - 1;
+            const daysToNow = Math.abs(dateDiff(lc[last], day));
+            for (let n = 0; n < last; n++) {
+                const daysBetween = dateDiff(lc[n], lc[n + 1]);
+                if (daysToNow % daysBetween === 0) {
+                    hits += 1 / (daysToNow / daysBetween);
+                }
+            }
+        }
+
+        if (hits > 0) {
+            frequencies.push({
+                comestible: state.comestibles.find(c => c.name === comestible)!,
+                hits,
+            });
+        }
+    }
+
+    const maxHits = frequencies
+        .map(x => x.hits)
+        .reduce((l, r) => (l > r ? l : r), 0);
+
+    const rightAboutNow = frequencies.slice(0, 8).map(x => ({
+        comestible: x.comestible,
+        probability: x.hits / maxHits,
+    }));
+
+    const implied = state.comestibles
         .filter(x => !ate.includes(x.name))
         .map(comestible => ({
             comestible,
@@ -33,6 +85,8 @@ export function mostOftenEatenWith(
                 ),
             })),
         }));
+
+    const candidates = ate.length === 0 ? rightAboutNow : implied;
 
     candidates.sort((l, r) => r.probability - l.probability);
 
@@ -50,8 +104,8 @@ export const AddComestible = memo(
         );
 
         const mealChoices = useMemo(
-            () => mostOftenEatenWith(state, meal, ate),
-            [state, meal, ate]
+            () => mostOftenEatenWith(state, meal, ate, day.date),
+            [state, meal, ate, day.date]
         );
 
         const found = (

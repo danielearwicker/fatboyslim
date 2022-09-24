@@ -65,15 +65,15 @@ function getParts(str: string) {
         .split(" ");
 }
 
-function compareStrings(a: string, b: string) {
-    const aParts = getParts(a);
-    const bParts = getParts(b);
+function compareStrings(within: string, find: string) {
+    const withinParts = getParts(within);
+    const findParts = getParts(find);
 
     let matches = 0;
 
-    for (const aPart of aParts) {
-        for (const bPart of bParts) {
-            matches += commonSuffix(aPart, bPart);
+    for (const findPart of findParts) {
+        for (const withinPart of withinParts) {
+            matches += withinPart.startsWith(findPart) ? 1 : 0;
         }
     }
 
@@ -124,6 +124,13 @@ export function addDays(date: string, add: number) {
     const d = new Date(date);
     d.setDate(d.getDate() + add);
     return isoDate(d);
+}
+
+export function dateDiff(date1: string, date2: string) {
+    const d1 = new Date(date1),
+        d2 = new Date(date2);
+
+    return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
 }
 
 export function today(): string {
