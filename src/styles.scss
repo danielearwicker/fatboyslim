@@ -139,13 +139,14 @@
     h3 {
         font-weight: normal;
         padding-bottom: 0.3em;
+        margin: 0;
         border-bottom: 1px solid silver;
     }
 
     .number-stat {
         text-align: center;
         display: inline-block;
-        margin-right: 1em;
+        margin: 0 1em 1em 0;
         background: #eee;
         padding: 1em;
         border-radius: 0.5em;
