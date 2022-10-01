@@ -4,6 +4,7 @@ import { FatboyAction } from "./reducer";
 import {
     LineSeries,
     MarkSeries,
+    MarkSeriesPoint,
     VerticalGridLines,
     XAxis,
     XYPlot,
@@ -17,17 +18,7 @@ export interface BodyProps {
 }
 
 export function Body({ state, dispatch }: BodyProps) {
-    const [value, setValue] = useState("");
     const [type, setType] = useState<MeasurementType>(measurementTypes[0]);
-
-    function add() {
-        dispatch({
-            type: "ADD_MEASUREMENT",
-            measurementType: type,
-            value: parseFloat(value),
-        });
-        setValue("");
-    }
 
     const orderedDates = state.measurements.map(x => x.date);
     orderedDates.sort();
@@ -58,6 +49,30 @@ export function Body({ state, dispatch }: BodyProps) {
             y: m.value,
         }));
 
+    function fetchValue(day: string, type: MeasurementType) {
+        const m = state.measurements.find(
+            x => x.date === day && x.type === type
+        );
+        return "" + (m?.value ?? "");
+    }
+
+    const [value, setValue] = useState(fetchValue(state.editingDay, type));
+
+    function add() {
+        if (!value) {
+            dispatch({
+                type: "REMOVE_MEASUREMENT",
+                measurementType: type,
+            });
+        } else {
+            dispatch({
+                type: "ADD_MEASUREMENT",
+                measurementType: type,
+                value: parseFloat(value),
+            });
+        }
+    }
+
     function dateTickFormat(numeric: number) {
         const date = new Date(dates[numeric]);
         const dom = date.getDate();
@@ -69,6 +84,14 @@ export function Body({ state, dispatch }: BodyProps) {
         }
         return "";
     }
+
+    function onClickPoint(point: MarkSeriesPoint) {
+        const date = dates[point.x as number];
+        dispatch({ type: "SET_EDITING_DATE", date });
+        setValue(fetchValue(date, type));
+    }
+
+    const showData = type === "Waist/cm" ? waistData : weightData;
 
     return (
         <>
@@ -95,9 +118,7 @@ export function Body({ state, dispatch }: BodyProps) {
                         />
                     </div>
                     <div className="buttons">
-                        <button onClick={add} disabled={!value.trim()}>
-                            Add
-                        </button>
+                        <button onClick={add}>Add</button>
                     </div>
                 </div>
                 <div className="history">
@@ -108,10 +129,23 @@ export function Body({ state, dispatch }: BodyProps) {
                             tickTotal={dates.length}
                         />
                         <YAxis />
-                        <LineSeries data={waistData} />
-                        <MarkSeries data={waistData} />
-                        <LineSeries data={weightData} />
-                        <MarkSeries data={weightData} />
+                        {/* {type === "Waist/cm" ? (
+                            <> */}
+                        <LineSeries data={showData} />
+                        <MarkSeries
+                            data={showData}
+                            onValueClick={onClickPoint}
+                        />
+                        {/* </>
+                        ) : (
+                            <> */}
+                        {/* <LineSeries data={weightData} />
+                        <MarkSeries
+                            data={weightData}
+                            onValueClick={onClickWeight}
+                        /> */}
+                        {/* </>
+                        )} */}
                     </XYPlot>
                 </div>
             </div>

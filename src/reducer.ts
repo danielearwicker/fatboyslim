@@ -58,6 +58,10 @@ export type FatboyAction =
           type: "ADD_MEASUREMENT";
           measurementType: MeasurementType;
           value: number;
+      }
+    | {
+          type: "REMOVE_MEASUREMENT";
+          measurementType: MeasurementType;
       };
 
 export function fatboyReducer(data: FatboyData, action: FatboyAction) {
@@ -167,7 +171,9 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
         case "ADD_MEASUREMENT":
             return produce(data, draft => {
                 const existing = draft.measurements.find(
-                    x => x.date === draft.editingDay && x.value === action.value
+                    x =>
+                        x.date === draft.editingDay &&
+                        x.type === action.measurementType
                 );
                 if (existing) {
                     existing.value = action.value;
@@ -177,6 +183,17 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                         value: action.value,
                         date: draft.editingDay,
                     });
+                }
+            });
+        case "REMOVE_MEASUREMENT":
+            return produce(data, draft => {
+                const existing = draft.measurements.findIndex(
+                    x =>
+                        x.date === draft.editingDay &&
+                        x.type === action.measurementType
+                );
+                if (existing !== -1) {
+                    draft.measurements.splice(existing, 1);
                 }
             });
     }
