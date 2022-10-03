@@ -105,7 +105,7 @@ export function Body({ state, dispatch }: BodyProps) {
                                 setType(e.target.value as MeasurementType)
                             }>
                             {measurementTypes.map(x => (
-                                <option>{x}</option>
+                                <option key={x}>{x}</option>
                             ))}
                         </select>
                     </div>
@@ -129,23 +129,11 @@ export function Body({ state, dispatch }: BodyProps) {
                             tickTotal={dates.length}
                         />
                         <YAxis />
-                        {/* {type === "Waist/cm" ? (
-                            <> */}
                         <LineSeries data={showData} />
                         <MarkSeries
                             data={showData}
                             onValueClick={onClickPoint}
                         />
-                        {/* </>
-                        ) : (
-                            <> */}
-                        {/* <LineSeries data={weightData} />
-                        <MarkSeries
-                            data={weightData}
-                            onValueClick={onClickWeight}
-                        /> */}
-                        {/* </>
-                        )} */}
                     </XYPlot>
                 </div>
             </div>

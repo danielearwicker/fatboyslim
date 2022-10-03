@@ -22,7 +22,7 @@ export function Stats({ state }: StatsProps) {
     const dayCount = state.days.length || 1;
 
     return (
-        <>
+        <div className="stats">
             <div className="stat-box">
                 <NumberStat value={state.days.length} label="days" />
                 <NumberStat value={totalCalories / dayCount} label="cal/day" />
@@ -105,6 +105,6 @@ export function Stats({ state }: StatsProps) {
                         }))}
                 />
             ))}
-        </>
+        </div>
     );
 }

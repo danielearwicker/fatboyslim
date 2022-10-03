@@ -1,4 +1,3 @@
-import { last } from "underscore";
 import "./styles.scss";
 
 export const categories = [
@@ -48,14 +47,6 @@ export function probabilityOfAGivenB<T>(
     const probBGivenA =
         countBoth === 0 ? 0 : countBoth / (countBoth + countOnlyA);
     return probB === 0 ? 0 : probA * (probBGivenA / probB);
-}
-
-function commonSuffix(a: string, b: string) {
-    let n = 0;
-    while (n < a.length && n < b.length && a[n] === b[n]) {
-        n++;
-    }
-    return n;
 }
 
 function getParts(str: string) {
@@ -152,10 +143,22 @@ export interface Measurement {
     type: MeasurementType;
 }
 
+export interface Picture {
+    id: string;
+    type: string;
+}
+
+export interface Note {
+    text: string;
+    date: string;
+    pictures: Picture[];
+}
+
 export type FatboyData = Readonly<{
     measurements: Measurement[];
     comestibles: readonly Comestible[];
     days: readonly Day[];
+    notes: Note[];
     editingDay: string;
 }>;
 

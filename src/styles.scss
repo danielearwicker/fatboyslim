@@ -1,8 +1,51 @@
 @import "../node_modules/react-vis/dist/style.css";
 
-.App {
+html,
+body,
+#root,
+.app,
+.app-content,
+.fatboy-slim {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.app {
     font-family: sans-serif;
     font-size: 1.5em;
+    display: flex;
+    flex-direction: column;
+}
+
+.storage-options-bar {
+    flex: 0 0 auto;
+    font-size: 0.5em;
+    padding: 0.5em;
+    background-color: black;
+    color: white;
+    text-align: right;
+
+    .storage-options-link {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
+
+.storage-options {
+    padding: 1em;
+
+    input {
+        width: 80%;
+        border: 1px solid silver;
+        padding: 0.5em;
+        border-radius: 5px;
+    }
+}
+
+.fatboy-slim {
+    display: flex;
+    flex-direction: column;
 }
 
 .over-the-limit {
@@ -12,9 +55,10 @@
 .tabs {
     display: flex;
     flex-direction: row;
+    padding: 0.5em 0.5em 0 0.5em;
 
     .tab {
-        font-size: 1em;
+        font-size: 0.8em;
         margin: 0 0.5em 0.5em 0;
         padding: 0 0 0.2em 0;
         border-bottom: 3px solid transparent;
@@ -25,11 +69,21 @@
 }
 
 .date-picker {
+    padding: 0 0.5em;
     input,
     button {
-        font-size: 1.2em;
+        font-size: 0.8em;
         margin-right: 0.5em;
     }
+}
+
+.day,
+.stats,
+.config,
+.measurements {
+    padding: 0.5em;
+    flex: 1 1 auto;
+    overflow: auto;
 }
 
 .calorie-bar {
@@ -212,6 +266,54 @@
                     color: mediumslateblue;
                 }
             }
+        }
+    }
+}
+
+.pictures {
+    display: flex;
+    flex-direction: row;
+    padding: 0 0.5em;
+    height: 4em;
+    overflow-x: auto;
+    overflow-y: hidden;
+    .add {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: silver;
+        font-size: 2em;
+        height: 2em;
+        width: 2em;
+        input[type="file"] {
+            display: none;
+        }
+    }
+    .picture {
+        img {
+            margin-left: 0.5em;
+            height: 4em;
+        }
+    }
+}
+.notes {
+    margin: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+
+    textarea {
+        position: absolute;
+        inset: 0.5em;
+        font-size: 1em;
+    }
+}
+
+.show-picture {
+    overflow: auto;
+    .large-picture {
+        img {
+            width: 100%;
         }
     }
 }

@@ -65,6 +65,7 @@ export function DayEditor({ state, dispatch }: DayEditorProps) {
                         stats={{ caloriesAverage: averageMeal[m.meal] }}
                         dispatch={dispatch}>
                         <AddComestible
+                            key={`${m.meal}_add_comestible`}
                             day={day}
                             meal={m.meal}
                             state={state}

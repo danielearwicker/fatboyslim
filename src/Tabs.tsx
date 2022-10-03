@@ -2,18 +2,15 @@ import { memo, useState } from "react";
 import { Body } from "./Body";
 import { Comestibles } from "./Comestibles";
 import { DayEditor } from "./DayEditor";
+import { Notes } from "./Notes";
+import { useFatboyStorage } from "./reducer";
 import { Stats } from "./Stats";
-import { SlimStorage } from "./storage";
 
-export interface TabsProps {
-    storage: SlimStorage;
-}
-
-const tabs = ["day", "stats", "comestibles", "body", "graph"] as const;
+const tabs = ["day", "stats", "comestibles", "body", "notes"] as const;
 type Tab = typeof tabs[number];
 
-export const Tabs = memo(({ storage }: TabsProps) => {
-    const { dispatch, state } = storage;
+export const Tabs = memo(() => {
+    const [state, dispatch] = useFatboyStorage();
 
     const [tab, setTab] = useState<Tab>("day");
 
@@ -41,6 +38,8 @@ export const Tabs = memo(({ storage }: TabsProps) => {
                 />
             ) : tab === "body" ? (
                 <Body state={state} dispatch={dispatch} />
+            ) : tab === "notes" ? (
+                <Notes state={state} dispatch={dispatch} />
             ) : undefined}
         </div>
     );

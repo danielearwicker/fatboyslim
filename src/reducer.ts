@@ -7,6 +7,8 @@ import {
     MeasurementType,
     today,
 } from "./data";
+import { useStorage } from "./encryptedStorage/Storage";
+import { useStorageBackedState } from "./encryptedStorage/useStorageBackedState";
 
 export type FatboyAction =
     | {
@@ -62,6 +64,19 @@ export type FatboyAction =
     | {
           type: "REMOVE_MEASUREMENT";
           measurementType: MeasurementType;
+      }
+    | {
+          type: "EDIT_NOTE";
+          text: string;
+      }
+    | {
+          type: "ADD_NOTE_PICTURE";
+          id: string;
+          contentType: string;
+      }
+    | {
+          type: "REMOVE_NOTE_PICTURE";
+          id: string;
       };
 
 export function fatboyReducer(data: FatboyData, action: FatboyAction) {
@@ -196,8 +211,82 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                     draft.measurements.splice(existing, 1);
                 }
             });
+        case "EDIT_NOTE":
+            return produce(data, draft => {
+                const existing = draft.notes?.find(
+                    x => x.date === draft.editingDay
+                );
+                if (existing) {
+                    existing.text = action.text;
+                } else {
+                    draft.notes?.push({
+                        text: action.text,
+                        date: draft.editingDay,
+                        pictures: [],
+                    });
+                }
+            });
+        case "ADD_NOTE_PICTURE":
+            return produce(data, draft => {
+                const existing = draft.notes?.find(
+                    x => x.date === draft.editingDay
+                );
+                const pic = {
+                    id: action.id,
+                    type: action.contentType,
+                };
+                if (existing) {
+                    existing.pictures.push(pic);
+                } else {
+                    draft.notes?.push({
+                        text: "",
+                        date: draft.editingDay,
+                        pictures: [pic],
+                    });
+                }
+            });
+        case "REMOVE_NOTE_PICTURE":
+            return produce(data, draft => {
+                const existing = draft.notes?.find(
+                    x => x.date === draft.editingDay
+                );
+                if (existing) {
+                    const i = existing.pictures.findIndex(
+                        x => x.id === action.id
+                    );
+                    if (i !== -1) {
+                        existing.pictures.splice(i, 1);
+                    }
+                }
+            });
     }
 
     const catchAll: never = action;
     throw new Error(`Unrecognised action ${JSON.stringify(catchAll)}`);
 }
+
+const initialState: FatboyData = {
+    measurements: [],
+    comestibles: [],
+    days: [],
+    notes: [],
+    editingDay: "2022-08-27",
+};
+
+function generateLoadAction(config: FatboyData): FatboyAction {
+    return { type: "LOAD", config };
+}
+
+export function useFatboyStorage() {
+    const storage = useStorage();
+
+    return useStorageBackedState(
+        storage,
+        "fatboy",
+        fatboyReducer,
+        initialState,
+        generateLoadAction
+    );
+}
+
+export type FatboyStorage = ReturnType<typeof useFatboyStorage>;

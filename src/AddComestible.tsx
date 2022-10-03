@@ -131,6 +131,7 @@ export const AddComestible = memo(
             <>
                 {found.map(c => (
                     <div
+                        key={c.comestible.name}
                         className="comestible addable"
                         onClick={() => {
                             dispatch({
