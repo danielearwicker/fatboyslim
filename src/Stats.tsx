@@ -1,14 +1,18 @@
 import {
+    addDays,
     categories,
+    dateDiff,
     FatboyData,
     getComestibleMap,
     getDayFacts,
     getFacts,
     sum,
+    today,
 } from "./data";
 import { chain as _ } from "underscore";
 import { StackedBar } from "./StackedBar";
 import { NumberStat } from "./NumberStat";
+import { useState } from "react";
 
 export interface StatsProps {
     state: FatboyData;
@@ -16,15 +20,42 @@ export interface StatsProps {
 
 export function Stats({ state }: StatsProps) {
     const comestibles = getComestibleMap(state);
-    const facts = getFacts(state, comestibles);
+
+    const [startDate, setStartDate] = useState(addDays(today(), -27));
+    const [endDate, setEndDate] = useState(today());
+
+    const filteredState = {
+        ...state,
+        days: state.days.filter(
+            d =>
+                (!startDate || dateDiff(startDate, d.date) >= 0) &&
+                (!endDate || dateDiff(endDate, d.date) <= 0)
+        ),
+    };
+
+    const facts = getFacts(filteredState, comestibles);
     const totalCalories = sum(facts.map(x => x.calories));
     const totalRedMeat = sum(facts.map(x => x.redMeat ?? 0));
-    const dayCount = state.days.length || 1;
+    const dayCount = filteredState.days.length || 1;
 
     return (
         <div className="stats">
+            <div className="filters">
+                <span>from</span>
+                <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                />
+                <span>to</span>
+                <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                />
+            </div>
             <div className="stat-box">
-                <NumberStat value={state.days.length} label="days" />
+                <NumberStat value={filteredState.days.length} label="days" />
                 <NumberStat value={totalCalories / dayCount} label="cal/day" />
                 <NumberStat
                     value={totalRedMeat / dayCount}
@@ -35,7 +66,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="history"
                 sort="bar"
-                source={state.days.flatMap(day =>
+                source={filteredState.days.flatMap(day =>
                     getDayFacts(day, comestibles).map(fact => ({
                         bar: day.date,
                         segment: fact.meal,
@@ -47,7 +78,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="red meat (g)"
                 sort="bar"
-                source={state.days.flatMap(day =>
+                source={filteredState.days.flatMap(day =>
                     getDayFacts(day, comestibles).map(fact => ({
                         bar: day.date,
                         segment: fact.comestible,

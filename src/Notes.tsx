@@ -158,6 +158,9 @@ export function Notes({ state, dispatch }: NotesProps) {
                     );
                 })}
             </div>
+            <div className="full-date">
+                <span>{new Date(state.editingDay).toDateString()}</span>
+            </div>
             <div className="notes">
                 <textarea
                     value={text}

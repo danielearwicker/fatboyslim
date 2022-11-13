@@ -65,9 +65,9 @@ export function useStorageBackedState<T extends object, A>(
                 );
 
                 const loaded = await storage.load(name);
-                const state = JSON.parse(
-                    new TextDecoder().decode(loaded.data)
-                ) as T;
+                const state = loaded.data
+                    ? (JSON.parse(new TextDecoder().decode(loaded.data)) as T)
+                    : initialState;
                 dispatchWithoutSave(generateLoadAction(state));
 
                 console.log("Loaded version", loaded.version);

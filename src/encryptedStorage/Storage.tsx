@@ -1,4 +1,3 @@
-import { BlobServiceClient } from "@azure/storage-blob";
 import React, { createContext, useContext, useState } from "react";
 import { decrypt, encrypt, generateEncryptionKey } from "./crypto";
 import { useLocalStorageState } from "./useLocalStorageState";
@@ -15,10 +14,21 @@ export interface StorageConfig {
     save(name: string, data: StoragePayload): Promise<string>;
 }
 
-function getBlob(url: string, name: string) {
-    const client = new BlobServiceClient(url);
-    const container = client.getContainerClient("data");
-    return container.getBlockBlobClient(name);
+export interface AbstractBlobClient {
+    download(): Promise<{
+        etag?: string;
+        blobBody?: Promise<Blob>;
+    }>;
+    uploadData(
+        data: ArrayBuffer,
+        options: {
+            conditions: {
+                ifMatch?: string;
+            };
+        }
+    ): Promise<{
+        etag?: string;
+    }>;
 }
 
 const StorageContext = createContext<StorageConfig>({
@@ -32,11 +42,18 @@ export function useStorage() {
     return useContext(StorageContext);
 }
 
-export interface StorageProps {}
+export interface StorageProps {
+    app: string;
+    backend(url: string, name: string): AbstractBlobClient;
+}
 
-export function Storage({ children }: React.PropsWithChildren<StorageProps>) {
-    const [key, setKey] = useLocalStorageState("storage-key");
-    const [con, setCon] = useLocalStorageState("storage-con");
+export function Storage({
+    app,
+    backend,
+    children,
+}: React.PropsWithChildren<StorageProps>) {
+    const [key, setKey] = useLocalStorageState(`storage-key-${app}`);
+    const [con, setCon] = useLocalStorageState(`storage-con-${app}`);
     const [editingKey, setEditingKey] = useState(key);
     const [editingCon, setEditingCon] = useState(con);
     const [showConfig, setShowConfig] = useState(false);
@@ -49,7 +66,7 @@ export function Storage({ children }: React.PropsWithChildren<StorageProps>) {
         encryptionKey: key,
         blobConnectionString: con,
         async load(name) {
-            const fetchedBlob = await getBlob(con, name).download();
+            const fetchedBlob = await backend(con, name).download();
             const version = fetchedBlob.etag!;
             let data: ArrayBuffer | undefined = undefined;
             try {
@@ -70,7 +87,7 @@ export function Storage({ children }: React.PropsWithChildren<StorageProps>) {
                       ifMatch: version,
                   };
 
-            const result = await getBlob(con, name).uploadData(encrypted, {
+            const result = await backend(con, name).uploadData(encrypted, {
                 conditions,
             });
             console.log("actual version", result.etag);
