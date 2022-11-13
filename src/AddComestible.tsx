@@ -93,7 +93,7 @@ export function mostOftenEatenWith(
         .filter(x => x.probability > 0);
 
     const extras = state.comestibles.filter(
-        x => x.calories < limit && x.category == "treat"
+        x => x.calories < limit && x.category == "treat" && !ate.includes(x.id)
     );
     extras.sort((l, r) => r.calories - l.calories);
     const topExtras = extras.slice(0, 5).map(comestible => ({
