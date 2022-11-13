@@ -5,7 +5,7 @@ import "./styles.scss";
 
 export default function App() {
     return (
-        <Storage backend={azureBackend}>
+        <Storage backend={azureBackend} app="fatboy">
             <Tabs />
         </Storage>
     );

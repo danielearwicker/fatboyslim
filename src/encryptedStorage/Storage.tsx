@@ -44,6 +44,7 @@ export function useStorage() {
 
 export interface StorageProps {
     app: string;
+    ephemeral?: boolean;
     backend(url: string, name: string): AbstractBlobClient;
 }
 
@@ -51,9 +52,18 @@ export function Storage({
     app,
     backend,
     children,
+    ephemeral,
 }: React.PropsWithChildren<StorageProps>) {
-    const [key, setKey] = useLocalStorageState(`storage-key-${app}`);
-    const [con, setCon] = useLocalStorageState(`storage-con-${app}`);
+    const [key, setKey] = useLocalStorageState(
+        `storage-key-${app}`,
+        "",
+        ephemeral
+    );
+    const [con, setCon] = useLocalStorageState(
+        `storage-con-${app}`,
+        "",
+        ephemeral
+    );
     const [editingKey, setEditingKey] = useState(key);
     const [editingCon, setEditingCon] = useState(con);
     const [showConfig, setShowConfig] = useState(false);
@@ -99,43 +109,57 @@ export function Storage({
         <div className="app">
             {!key || !con || showConfig ? (
                 <div className="storage-options">
-                    <h2>Encryption key</h2>
-                    <p>
-                        <input
-                            value={editingKey}
-                            onChange={e => setEditingKey(e.target.value)}
-                        />
-                    </p>
-                    <p>
-                        <button onClick={() => setKey(editingKey)}>Save</button>
-                        <button onClick={() => setEditingKey(key)}>
-                            Revert
-                        </button>
-                        <button onClick={onClickGenerateKey}>Generate</button>
-                    </p>
-                    <h2>Blob Connection String</h2>
-                    <p>
-                        <input
-                            value={editingCon}
-                            onChange={e => setEditingCon(e.target.value)}
-                        />
-                        {editingCon != con && (
-                            <>
-                                <button onClick={() => setCon(editingCon)}>
-                                    Save
-                                </button>
-                                <button onClick={() => setEditingCon(con)}>
-                                    Revert
-                                </button>
-                            </>
-                        )}
-                    </p>
-                    <hr />
-                    <p>
-                        <button onClick={() => setShowConfig(false)}>
-                            Back
-                        </button>
-                    </p>
+                    <form>
+                        <h2>
+                            <label htmlFor="encryption-key">
+                                Encryption key
+                            </label>
+                        </h2>
+                        <p>
+                            <input
+                                name="encryption-key"
+                                id="encryption-key"
+                                value={editingKey}
+                                onChange={e => setEditingKey(e.target.value)}
+                            />
+                        </p>
+                        <p>
+                            <button onClick={() => setKey(editingKey)}>
+                                Save
+                            </button>
+                            <button onClick={() => setEditingKey(key)}>
+                                Revert
+                            </button>
+                            <button onClick={onClickGenerateKey}>
+                                Generate
+                            </button>
+                        </p>
+                        <h2>Blob Connection String</h2>
+                        <p>
+                            <input
+                                name="connection-string"
+                                id="connection-string"
+                                value={editingCon}
+                                onChange={e => setEditingCon(e.target.value)}
+                            />
+                            {editingCon != con && (
+                                <>
+                                    <button onClick={() => setCon(editingCon)}>
+                                        Save
+                                    </button>
+                                    <button onClick={() => setEditingCon(con)}>
+                                        Revert
+                                    </button>
+                                </>
+                            )}
+                        </p>
+                        <hr />
+                        <p>
+                            <button onClick={() => setShowConfig(false)}>
+                                Back
+                            </button>
+                        </p>
+                    </form>
                 </div>
             ) : (
                 <>

@@ -3,7 +3,7 @@ import { AddComestible } from "./AddComestible";
 import { FatboyData, getComestibleMap, getFacts, meals, sum } from "./data";
 import { DatePicker } from "./DatePicker";
 import { MealContents } from "./MealContents";
-import { ProgressBar } from "./ProgressBar";
+import { alreadyPlanned, dailyLimit, ProgressBar } from "./ProgressBar";
 import { FatboyAction } from "./reducer";
 import { chain as _ } from "underscore";
 
@@ -33,6 +33,9 @@ export function DayEditor({ state, dispatch }: DayEditorProps) {
         }))
         .filter(x => !!x.comestible);
 
+    const total = alreadyPlanned(ate);
+    const remaining = Math.max(dailyLimit - total);
+
     const byMeal = useMemo(
         () =>
             meals.map(m => ({
@@ -54,20 +57,22 @@ export function DayEditor({ state, dispatch }: DayEditorProps) {
     return (
         <>
             <DatePicker value={state.editingDay} dispatch={dispatch} />
+            <ProgressBar total={total} />
             <div className="day">
                 {!existingDay && <p>It's a brand new day!</p>}
-                <ProgressBar ate={ate} />
                 {byMeal.map(m => (
                     <MealContents
                         key={m.meal}
                         meal={m.meal}
                         ate={m.ate}
                         stats={{ caloriesAverage: averageMeal[m.meal] }}
+                        limit={remaining}
                         dispatch={dispatch}>
                         <AddComestible
                             key={`${m.meal}_add_comestible`}
                             day={day}
                             meal={m.meal}
+                            limit={remaining}
                             state={state}
                             dispatch={dispatch}
                         />

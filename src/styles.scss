@@ -86,8 +86,13 @@ body,
     overflow: auto;
 }
 
+.day {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .calorie-bar {
-    margin-top: 1em;
+    margin: 0.5em;
     border-radius: 0.5em;
     background: burlywood;
     position: relative;
@@ -113,7 +118,7 @@ body,
 }
 
 .meal {
-    margin: 1em 0;
+    margin-bottom: 1em;
     padding: 0.5em;
     background: beige;
     border-radius: 0.5em;
@@ -162,6 +167,10 @@ body,
             color: black;
             cursor: pointer;
             background: gold;
+
+            &.too-much {
+                background-color: pink;
+            }
         }
 
         .delete {
@@ -173,6 +182,10 @@ body,
         &.addable {
             opacity: 0.5;
             cursor: pointer;
+
+            &.too-much {
+                background-color: pink;
+            }
         }
     }
 

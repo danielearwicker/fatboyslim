@@ -1,6 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
 import {
-    addDays,
     Comestible,
     dateDiff,
     Day,
@@ -8,6 +7,7 @@ import {
     Meal,
     probabilityOfAGivenB,
     searchComestibles,
+    sortComestibleChoices,
 } from "./data";
 import { FatboyAction } from "./reducer";
 
@@ -15,6 +15,7 @@ export type AddComestibleProps = Readonly<{
     day: Day;
     meal: Meal;
     state: FatboyData;
+    limit: number;
     dispatch: React.Dispatch<FatboyAction>;
 }>;
 
@@ -22,7 +23,8 @@ export function mostOftenEatenWith(
     state: FatboyData,
     meal: Meal,
     ate: string[],
-    day: string
+    day: string,
+    limit: number
 ) {
     const lastConsumed: Record<string, string[]> = {};
 
@@ -88,13 +90,13 @@ export function mostOftenEatenWith(
 
     const candidates = ate.length === 0 ? rightAboutNow : implied;
 
-    candidates.sort((l, r) => r.probability - l.probability);
+    sortComestibleChoices(candidates, limit);
 
     return candidates.filter(x => x.probability > 0);
 }
 
 export const AddComestible = memo(
-    ({ day, meal, state, dispatch }: AddComestibleProps) => {
+    ({ day, meal, limit, state, dispatch }: AddComestibleProps) => {
         const [search, setSearch] = useState("");
         const [calories, setCalories] = useState("");
 
@@ -104,7 +106,7 @@ export const AddComestible = memo(
         );
 
         const mealChoices = useMemo(
-            () => mostOftenEatenWith(state, meal, ate, day.date),
+            () => mostOftenEatenWith(state, meal, ate, day.date, limit),
             [state, meal, ate, day.date]
         );
 
@@ -112,7 +114,8 @@ export const AddComestible = memo(
             search.trim().length > 0
                 ? searchComestibles(
                       state.comestibles.filter(x => !ate.includes(x.name)),
-                      search
+                      search,
+                      limit
                   )
                 : mealChoices
         ).slice(0, 10);
@@ -132,7 +135,9 @@ export const AddComestible = memo(
                 {found.map(c => (
                     <div
                         key={c.comestible.name}
-                        className="comestible addable"
+                        className={`comestible addable${
+                            c.comestible.calories > limit ? " too-much" : ""
+                        }`}
                         onClick={() => {
                             dispatch({
                                 type: "ADD_ATE",

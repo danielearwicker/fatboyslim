@@ -71,9 +71,29 @@ function compareStrings(within: string, find: string) {
     return matches;
 }
 
+export function sortComestibleChoices(
+    choices: {
+        probability: number;
+        comestible: {
+            calories: number;
+        };
+    }[],
+    limit: number
+) {
+    choices.sort((l, r) => {
+        const lAllowed = l.comestible.calories < limit ? 1 : 0;
+        const rAllowed = r.comestible.calories < limit ? 1 : 0;
+        if (lAllowed === rAllowed) {
+            return r.probability - l.probability;
+        }
+        return rAllowed - lAllowed;
+    });
+}
+
 export function searchComestibles(
     comestibles: readonly Comestible[],
-    search: string
+    search: string,
+    limit: number
 ) {
     const found = comestibles
         .map(comestible => ({
@@ -89,7 +109,7 @@ export function searchComestibles(
         probability: x.score / total,
     }));
 
-    scaled.sort((l, r) => r.probability - l.probability);
+    sortComestibleChoices(scaled, limit);
     return scaled;
 }
 

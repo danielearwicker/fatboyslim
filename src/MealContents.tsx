@@ -9,6 +9,7 @@ export interface MealProps {
     stats: {
         caloriesAverage: number;
     };
+    limit: number;
     dispatch: React.Dispatch<FatboyAction>;
     children: ReactNode;
 }
@@ -17,6 +18,7 @@ export const MealContents = ({
     meal,
     ate,
     stats,
+    limit,
     dispatch,
     children,
 }: MealProps) => {
@@ -40,7 +42,9 @@ export const MealContents = ({
                         <span className="calories">{c.calories}</span>
                         <span className="name">{c.name}</span>
                         <span
-                            className="quantity"
+                            className={`quantity${
+                                c.calories > limit ? " too-much" : ""
+                            }`}
                             onClick={() => {
                                 dispatch({
                                     type: "ADD_ATE",
