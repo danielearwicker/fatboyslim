@@ -59,7 +59,7 @@ export function mostOftenEatenWith(
 
         if (hits > 0) {
             frequencies.push({
-                comestible: state.comestibles.find(c => c.name === comestible)!,
+                comestible: state.comestibles.find(c => c.id === comestible)!,
                 hits,
             });
         }
@@ -69,30 +69,48 @@ export function mostOftenEatenWith(
         .map(x => x.hits)
         .reduce((l, r) => (l > r ? l : r), 0);
 
-    const rightAboutNow = frequencies.slice(0, 8).map(x => ({
-        comestible: x.comestible,
-        probability: x.hits / maxHits,
-    }));
+    const rightAboutNow = frequencies
+        .slice(0, 8)
+        .map(x => ({
+            comestible: x.comestible,
+            probability: x.hits / maxHits,
+        }))
+        .filter(x => x.probability > 0);
 
     const implied = state.comestibles
-        .filter(x => !ate.includes(x.name))
+        .filter(x => !ate.includes(x.id))
         .map(comestible => ({
             comestible,
             probability: probabilityOfAGivenB(state.days, day => ({
                 a: day.ate.some(
-                    x => x.comestible === comestible.name && x.meal === meal
+                    x => x.comestible === comestible.id && x.meal === meal
                 ),
                 b: ate.every(y =>
                     day.ate.some(x => x.comestible === y && x.meal === meal)
                 ),
             })),
-        }));
+        }))
+        .filter(x => x.probability > 0);
 
-    const candidates = ate.length === 0 ? rightAboutNow : implied;
+    const extras = state.comestibles.filter(
+        x => x.calories < limit && x.category == "treat"
+    );
+    extras.sort((l, r) => r.calories - l.calories);
+    const topExtras = extras.slice(0, 5).map(comestible => ({
+        probability: 1,
+        comestible,
+    }));
+
+    const candidates =
+        ate.length === 0
+            ? rightAboutNow
+            : implied.length !== 0
+            ? implied
+            : topExtras;
 
     sortComestibleChoices(candidates, limit);
 
-    return candidates.filter(x => x.probability > 0);
+    return candidates;
 }
 
 export const AddComestible = memo(
@@ -113,7 +131,7 @@ export const AddComestible = memo(
         const found = (
             search.trim().length > 0
                 ? searchComestibles(
-                      state.comestibles.filter(x => !ate.includes(x.name)),
+                      state.comestibles.filter(x => !ate.includes(x.id)),
                       search,
                       limit
                   )
@@ -134,7 +152,7 @@ export const AddComestible = memo(
             <>
                 {found.map(c => (
                     <div
-                        key={c.comestible.name}
+                        key={c.comestible.id}
                         className={`comestible addable${
                             c.comestible.calories > limit ? " too-much" : ""
                         }`}
@@ -142,14 +160,14 @@ export const AddComestible = memo(
                             dispatch({
                                 type: "ADD_ATE",
                                 meal,
-                                comestible: c.comestible.name,
+                                comestible: c.comestible.id,
                             });
                             reset();
                         }}>
                         <span className="calories">
                             {c.comestible.calories}
                         </span>
-                        <span className="name">{c.comestible.name}</span>
+                        <span className="name">{c.comestible.label}</span>
                         {!!c.probability && (
                             <span className="probability">
                                 {(c.probability * 100).toFixed(0)}%
@@ -180,7 +198,7 @@ export const AddComestible = memo(
                                 dispatch({
                                     type: "ADD_ATE",
                                     meal,
-                                    comestible: found[0].comestible.name,
+                                    comestible: found[0].comestible.id,
                                 });
                                 reset();
                             }

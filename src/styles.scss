@@ -65,6 +65,18 @@ body,
         &.selected {
             border-bottom: 3px solid teal;
         }
+        position: relative;
+
+        .count {
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            font-size: 0.6em;
+            background-color: red;
+            color: white;
+            padding: 2px;
+            border-radius: 4px;
+        }
     }
 }
 

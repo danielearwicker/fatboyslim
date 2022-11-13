@@ -15,13 +15,16 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     const [editing, setEditing] = useState("");
     const [calories, setCalories] = useState("");
     const [redMeat, setRedMeat] = useState("");
+    const [name, setName] = useState("");
 
     const sorted = state.comestibles.slice(0);
 
     if (sort === "alpha") {
-        sorted.sort((l, r) => l.name.localeCompare(r.name));
+        sorted.sort((l, r) => l.label.localeCompare(r.label));
     } else if (sort === "calories") {
         sorted.sort((l, r) => r.calories - l.calories);
+    } else if (sort === "category") {
+        sorted.sort((l, r) => l.category.localeCompare(r.category));
     } else if (sort === "latest") {
         sorted.reverse();
     }
@@ -29,7 +32,9 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     const filtered =
         search.trim().length === 0
             ? sorted
-            : searchComestibles(sorted, search).map(x => x.comestible);
+            : searchComestibles(sorted, search, Number.MAX_VALUE).map(
+                  x => x.comestible
+              );
 
     return (
         <div className="config">
@@ -42,13 +47,14 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                 <option value="alpha">Sort alphabetically</option>
                 <option value="latest">Sort latest first</option>
                 <option value="calories">Sort by calories</option>
+                <option value="category">Sort by category</option>
             </select>
             {filtered.map(c => (
                 <div
-                    key={c.name}
+                    key={c.id}
                     className={`comestible ${c.redMeat ? " red-meat" : ""}`}>
                     <div>
-                        <span className="name">{c.name}</span>
+                        <span className="name">{c.label}</span>
                         <span className="calories">{c.calories} kCal</span>
                         {!!c.redMeat && (
                             <span className="red-meat">
@@ -62,7 +68,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                         onChange={e =>
                             dispatch({
                                 type: "SET_CATEGORY",
-                                comestible: c.name,
+                                comestible: c.id,
                                 category: e.target.value as Category,
                             })
                         }>
@@ -75,13 +81,23 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                             onClick={() => {
                                 setCalories(`${c.calories}`);
                                 setRedMeat(`${c.redMeat}`);
-                                setEditing(c.name);
+                                setName(c.label);
+                                setEditing(c.id);
                             }}>
                             Edit
                         </button>
                     )}
-                    {editing === c.name && (
+                    {editing === c.id && (
                         <div className="editing">
+                            <div>
+                                <label>Name</label>
+                                <input
+                                    className="name"
+                                    placeholder="Name"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                            </div>
                             <div>
                                 <label>Calories</label>
                                 <input
@@ -111,9 +127,10 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                     onClick={() => {
                                         dispatch({
                                             type: "CONFIGURE_COMESTIBLE",
-                                            comestible: c.name,
+                                            comestible: editing,
                                             calories: parseFloat(calories),
                                             redMeat: parseFloat(redMeat),
+                                            newName: name,
                                         });
                                         setEditing("");
                                     }}>
@@ -127,15 +144,14 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                     )}
                     <div className="days">
                         {_(state.days)
-                            .filter(x =>
-                                x.ate.some(a => a.comestible === c.name)
-                            )
+                            .filter(x => x.ate.some(a => a.comestible === c.id))
                             .sortBy(x => x.date)
                             .reverse()
                             .slice(0, 3)
                             .map(x => (
                                 <span
                                     className="ate"
+                                    key={x.date}
                                     onClick={() => {
                                         dispatch({
                                             type: "SET_EDITING_DATE",

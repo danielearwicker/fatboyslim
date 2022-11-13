@@ -17,7 +17,8 @@ export const categories = [
 export type Category = typeof categories[number];
 
 export type Comestible = Readonly<{
-    name: string;
+    id: string;
+    label: string;
     calories: number;
     category: Category;
     redMeat: number;
@@ -27,26 +28,22 @@ export function probabilityOfAGivenB<T>(
     items: readonly Readonly<T>[],
     classify: (item: Readonly<T>) => { a: boolean; b: boolean }
 ) {
-    let countOnlyA = 0,
-        countOnlyB = 0,
-        countBoth = 0;
+    let countOnlyB = 0,
+        countAB = 0;
 
     for (const item of items) {
         const { a, b } = classify(item);
-        if (a && b) {
-            countBoth++;
-        } else if (a) {
-            countOnlyA++;
-        } else if (b) {
-            countOnlyB++;
+        if (b) {
+            if (a) {
+                countAB++;
+            } else {
+                countOnlyB++;
+            }
         }
     }
 
-    const probA = (countOnlyA + countBoth) / items.length;
-    const probB = (countOnlyB + countBoth) / items.length;
-    const probBGivenA =
-        countBoth === 0 ? 0 : countBoth / (countBoth + countOnlyA);
-    return probB === 0 ? 0 : probA * (probBGivenA / probB);
+    const countB = countAB + countOnlyB;
+    return countB === 0 ? 0 : countAB / countB;
 }
 
 function getParts(str: string) {
@@ -98,7 +95,7 @@ export function searchComestibles(
     const found = comestibles
         .map(comestible => ({
             comestible,
-            score: compareStrings(comestible.name, search),
+            score: compareStrings(comestible.label, search),
         }))
         .filter(x => x.score > 0);
 
@@ -187,7 +184,7 @@ export function sum(ar: number[]) {
 }
 
 export function getComestibleMap(state: FatboyData) {
-    return Object.fromEntries(state.comestibles.map(x => [x.name, x]));
+    return Object.fromEntries(state.comestibles.map(x => [x.id, x]));
 }
 
 export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
@@ -203,7 +200,7 @@ export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
             quantity: a.quantity,
             calories: c.calories * a.quantity,
             redMeat: c.redMeat * a.quantity,
-            comestible: c.name,
+            comestible: c.id,
             meal: a.meal,
         };
     });

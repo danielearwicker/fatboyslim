@@ -81,7 +81,7 @@ export function Stats({ state }: StatsProps) {
                 source={filteredState.days.flatMap(day =>
                     getDayFacts(day, comestibles).map(fact => ({
                         bar: day.date,
-                        segment: fact.comestible,
+                        segment: comestibles[fact.comestible].label,
                         value: fact.redMeat,
                     }))
                 )}
@@ -90,7 +90,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="comestibles (calories)"
                 source={facts.map(x => ({
-                    bar: x.comestible,
+                    bar: comestibles[x.comestible].label,
                     segment: x.meal,
                     value: x.calories / dayCount,
                 }))}
@@ -99,7 +99,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="comestibles (per week)"
                 source={facts.map(x => ({
-                    bar: x.comestible,
+                    bar: comestibles[x.comestible].label,
                     segment: x.meal,
                     value: 7 / dayCount,
                 }))}
@@ -118,7 +118,7 @@ export function Stats({ state }: StatsProps) {
                 title="categories"
                 source={facts.map(x => ({
                     bar: x.category,
-                    segment: x.comestible,
+                    segment: comestibles[x.comestible].label,
                     value: x.calories / dayCount,
                 }))}
             />
@@ -130,7 +130,7 @@ export function Stats({ state }: StatsProps) {
                     source={facts
                         .filter(x => x.category === category)
                         .map(x => ({
-                            bar: x.comestible,
+                            bar: comestibles[x.comestible].label,
                             segment: x.meal,
                             value: x.calories / dayCount,
                         }))}

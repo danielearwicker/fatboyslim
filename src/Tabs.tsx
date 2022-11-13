@@ -14,6 +14,11 @@ export const Tabs = memo(() => {
 
     const [tab, setTab] = useState<Tab>("day");
 
+    const counts: Partial<Record<Tab, number>> = {
+        comestibles: state.comestibles.filter(x => x.category === "other")
+            .length,
+    };
+
     return (
         <div className="fatboy-slim">
             <div className="tabs">
@@ -23,6 +28,9 @@ export const Tabs = memo(() => {
                         className={`tab${t === tab ? " selected" : ""}`}
                         onClick={() => setTab(t)}>
                         {t}
+                        {(counts[t] ?? 0) > 0 && (
+                            <div className="count">{counts[t]}</div>
+                        )}
                     </div>
                 ))}
             </div>

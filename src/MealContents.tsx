@@ -5,7 +5,7 @@ import { FatboyAction } from "./reducer";
 
 export interface MealProps {
     meal: Meal;
-    ate: { name: string; calories: number; quantity: number }[];
+    ate: { id: string; label: string; calories: number; quantity: number }[];
     stats: {
         caloriesAverage: number;
     };
@@ -38,9 +38,9 @@ export const MealContents = ({
             </div>
             <div className="ate">
                 {ate.map(c => (
-                    <div key={c.name} className="comestible">
+                    <div key={c.id} className="comestible">
                         <span className="calories">{c.calories}</span>
-                        <span className="name">{c.name}</span>
+                        <span className="name">{c.label}</span>
                         <span
                             className={`quantity${
                                 c.calories > limit ? " too-much" : ""
@@ -49,7 +49,7 @@ export const MealContents = ({
                                 dispatch({
                                     type: "ADD_ATE",
                                     meal,
-                                    comestible: c.name,
+                                    comestible: c.id,
                                 });
                             }}>
                             {c.quantity > 1 ? `x${c.quantity}` : "+"}
@@ -60,7 +60,7 @@ export const MealContents = ({
                                 dispatch({
                                     type: "DELETE_ATE",
                                     meal,
-                                    comestible: c.name,
+                                    comestible: c.id,
                                 })
                             }>
                             🗑

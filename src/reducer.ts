@@ -55,6 +55,7 @@ export type FatboyAction =
           comestible: string;
           calories: number;
           redMeat: number;
+          newName: string;
       }
     | {
           type: "ADD_MEASUREMENT";
@@ -81,8 +82,9 @@ export type FatboyAction =
 
 export function fatboyReducer(data: FatboyData, action: FatboyAction) {
     switch (action.type) {
-        case "LOAD":
+        case "LOAD": {
             return action.config;
+        }
         case "SET_EDITING_DATE":
             return produce(data, draft => {
                 draft.editingDay = action.date;
@@ -153,11 +155,12 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
             return produce(data, draft => {
                 if (
                     !draft.comestibles.find(
-                        c => c.name.toLowerCase() === action.name.toLowerCase()
+                        c => c.label.toLowerCase() === action.name.toLowerCase()
                     )
                 ) {
                     draft.comestibles.push({
-                        name: action.name,
+                        id: window.crypto.randomUUID(),
+                        label: action.name,
                         calories: action.calories,
                         category: action.category,
                         redMeat: 0,
@@ -167,7 +170,7 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
         case "SET_CATEGORY":
             return produce(data, draft => {
                 const c = draft.comestibles.find(
-                    x => x.name === action.comestible
+                    x => x.id === action.comestible
                 );
                 if (c) {
                     c.category = action.category;
@@ -176,11 +179,12 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
         case "CONFIGURE_COMESTIBLE":
             return produce(data, draft => {
                 const c = draft.comestibles.find(
-                    x => x.name === action.comestible
+                    x => x.id === action.comestible
                 );
                 if (c) {
                     c.calories = action.calories;
                     c.redMeat = action.redMeat;
+                    c.label = action.newName;
                 }
             });
         case "ADD_MEASUREMENT":
