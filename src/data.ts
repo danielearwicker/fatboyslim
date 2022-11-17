@@ -193,6 +193,9 @@ export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
             name: "unknown",
             category: "other",
             calories: 0,
+            redMeat: 0,
+            comestible: a.comestible,
+            meal: a.meal,
         };
 
         return {

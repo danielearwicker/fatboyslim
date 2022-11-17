@@ -187,11 +187,7 @@ export const AddComestible = memo(
                                     calories: parseFloat(calories),
                                     category: "other",
                                     redMeat: 0,
-                                });
-                                dispatch({
-                                    type: "ADD_ATE",
                                     meal,
-                                    comestible: search,
                                 });
                                 reset();
                             } else if (found.length > 0) {

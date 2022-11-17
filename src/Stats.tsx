@@ -21,6 +21,15 @@ export interface StatsProps {
 export function Stats({ state }: StatsProps) {
     const comestibles = getComestibleMap(state);
 
+    function getLabel(c: string) {
+        const label = comestibles[c]?.label;
+        if (!label) {
+            console.log("getLabel", "missing", c);
+            return "[none]";
+        }
+        return label;
+    }
+
     const [startDate, setStartDate] = useState(addDays(today(), -27));
     const [endDate, setEndDate] = useState(today());
 
@@ -81,7 +90,7 @@ export function Stats({ state }: StatsProps) {
                 source={filteredState.days.flatMap(day =>
                     getDayFacts(day, comestibles).map(fact => ({
                         bar: day.date,
-                        segment: comestibles[fact.comestible].label,
+                        segment: getLabel(fact.comestible),
                         value: fact.redMeat,
                     }))
                 )}
@@ -90,7 +99,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="comestibles (calories)"
                 source={facts.map(x => ({
-                    bar: comestibles[x.comestible].label,
+                    bar: getLabel(x.comestible),
                     segment: x.meal,
                     value: x.calories / dayCount,
                 }))}
@@ -99,7 +108,7 @@ export function Stats({ state }: StatsProps) {
             <StackedBar
                 title="comestibles (per week)"
                 source={facts.map(x => ({
-                    bar: comestibles[x.comestible].label,
+                    bar: getLabel(x.comestible),
                     segment: x.meal,
                     value: 7 / dayCount,
                 }))}
@@ -118,7 +127,7 @@ export function Stats({ state }: StatsProps) {
                 title="categories"
                 source={facts.map(x => ({
                     bar: x.category,
-                    segment: comestibles[x.comestible].label,
+                    segment: getLabel(x.comestible),
                     value: x.calories / dayCount,
                 }))}
             />
@@ -130,7 +139,7 @@ export function Stats({ state }: StatsProps) {
                     source={facts
                         .filter(x => x.category === category)
                         .map(x => ({
-                            bar: comestibles[x.comestible].label,
+                            bar: getLabel(x.comestible),
                             segment: x.meal,
                             value: x.calories / dayCount,
                         }))}

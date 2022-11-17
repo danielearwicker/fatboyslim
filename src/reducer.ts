@@ -44,6 +44,7 @@ export type FatboyAction =
           calories: number;
           category: Category;
           redMeat: number;
+          meal: Meal;
       }
     | {
           type: "SET_CATEGORY";
@@ -158,12 +159,25 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                         c => c.label.toLowerCase() === action.name.toLowerCase()
                     )
                 ) {
+                    const id = window.crypto.randomUUID();
                     draft.comestibles.push({
-                        id: window.crypto.randomUUID(),
+                        id,
                         label: action.name,
                         calories: action.calories,
                         category: action.category,
                         redMeat: 0,
+                    });
+
+                    let day = draft.days.find(x => x.date === draft.editingDay);
+                    if (!day) {
+                        day = { date: draft.editingDay, ate: [] };
+                        draft.days.push(day);
+                    }
+
+                    day.ate.push({
+                        meal: action.meal,
+                        comestible: id,
+                        quantity: 1,
                     });
                 }
             });
