@@ -13,6 +13,8 @@ import { chain as _ } from "underscore";
 import { StackedBar } from "./StackedBar";
 import { NumberStat } from "./NumberStat";
 import { useState } from "react";
+import { LineSeries } from "react-vis";
+import { getDailyLimit } from "./ProgressBar";
 
 export interface StatsProps {
     state: FatboyData;
@@ -81,8 +83,16 @@ export function Stats({ state }: StatsProps) {
                         segment: fact.meal,
                         value: fact.calories,
                     }))
-                )}
-            />
+                )}>
+                <LineSeries
+                    data={filteredState.days.flatMap((day, i) => ({
+                        y: i,
+                        x: getDailyLimit(day.date),
+                    }))}
+                    color="blue"
+                    opacity={0.3}
+                />
+            </StackedBar>
 
             <StackedBar
                 title="red meat (g)"

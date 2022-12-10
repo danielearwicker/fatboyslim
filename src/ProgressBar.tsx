@@ -1,11 +1,30 @@
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { Comestible, formatNumber } from "./data";
 import "./styles.scss";
 
-export const dailyLimit = 1800;
+type DailyLimitPeriod = {
+    limit: number;
+    startDate: string;
+};
+
+export const dailyLimitPeriods: DailyLimitPeriod[] = [
+    { startDate: "2022-12-10", limit: 1900 },
+    { startDate: "2022-08-10", limit: 1800 },
+];
+
+export function getDailyLimit(day: string) {
+    for (const p of dailyLimitPeriods) {
+        if (day >= p.startDate) {
+            return p.limit;
+        }
+    }
+
+    return 5000;
+}
 
 export interface ProgressBarProps {
     total: number;
+    dailyLimit: number;
 }
 
 export function alreadyPlanned(
@@ -16,7 +35,7 @@ export function alreadyPlanned(
         .reduce((l, r) => l + r, 0);
 }
 
-export const ProgressBar = memo(({ total }: ProgressBarProps) => {
+export const ProgressBar = memo(({ total, dailyLimit }: ProgressBarProps) => {
     const progress = (100 * total) / dailyLimit;
 
     return total > dailyLimit ? (

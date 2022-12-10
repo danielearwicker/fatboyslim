@@ -23,7 +23,13 @@ export interface StackedBarProps {
     sort?: "bar" | "value";
 }
 
-export function StackedBar({ title, source, segments, sort }: StackedBarProps) {
+export function StackedBar({
+    title,
+    source,
+    segments,
+    sort,
+    children,
+}: React.PropsWithChildren<StackedBarProps>) {
     segments ??= _(source)
         .map(x => x.segment)
         .unique()
@@ -101,6 +107,7 @@ export function StackedBar({ title, source, segments, sort }: StackedBarProps) {
                         />
                     );
                 })}
+                {children}
                 {hint ? (
                     <Hint value={hint.point}>
                         <div className="tooltip">
