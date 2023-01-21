@@ -141,11 +141,6 @@ export const AddComestible = memo(
         function reset() {
             setSearch("");
             setCalories("");
-            setTimeout(() => {
-                (
-                    document.querySelector(`.${meal} .search`) as HTMLElement
-                ).focus();
-            }, 1);
         }
 
         return (
