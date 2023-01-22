@@ -20,8 +20,10 @@ export interface BodyProps {
 export function Body({ state, dispatch }: BodyProps) {
     const [type, setType] = useState<MeasurementType>(measurementTypes[0]);
 
-    const orderedDates = state.measurements.map(x => x.date);
-    orderedDates.sort();
+    const orderedMeasurements = state.measurements.slice();
+    orderedMeasurements.sort((l, r) => l.date.localeCompare(r.date));
+
+    const orderedDates = orderedMeasurements.map(x => x.date);
 
     const dates: string[] = [];
 
@@ -35,14 +37,14 @@ export function Body({ state, dispatch }: BodyProps) {
         }
     }
 
-    const waistData = state.measurements
+    const waistData = orderedMeasurements
         .filter(m => m.type === "Waist/cm")
         .map(m => ({
             x: numbersByDate[m.date],
             y: m.value,
         }));
 
-    const weightData = state.measurements
+    const weightData = orderedMeasurements
         .filter(m => m.type === "Weight/kg")
         .map(m => ({
             x: numbersByDate[m.date],
@@ -50,7 +52,7 @@ export function Body({ state, dispatch }: BodyProps) {
         }));
 
     function fetchValue(day: string, type: MeasurementType) {
-        const m = state.measurements.find(
+        const m = orderedMeasurements.find(
             x => x.date === day && x.type === type
         );
         return "" + (m?.value ?? "");
