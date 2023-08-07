@@ -59,13 +59,21 @@ export function Storage({
         "",
         ephemeral
     );
+
     const [con, setCon] = useLocalStorageState(
         `storage-con-${app}`,
         "",
         ephemeral
     );
+    const [user, setUser] = useLocalStorageState(
+        `storage-user-${app}`,
+        "",
+        ephemeral
+    );
     const [editingKey, setEditingKey] = useState(key);
     const [editingCon, setEditingCon] = useState(con);
+    const [editingUser, setEditingUser] = useState(user);
+
     const [showConfig, setShowConfig] = useState(false);
 
     async function onClickGenerateKey() {
@@ -76,7 +84,10 @@ export function Storage({
         encryptionKey: key,
         blobConnectionString: con,
         async load(name) {
-            const fetchedBlob = await backend(con, name).download();
+            const fetchedBlob = await backend(
+                con,
+                `${user}-${name}`
+            ).download();
             const version = fetchedBlob.etag!;
             let data: ArrayBuffer | undefined = undefined;
             try {
@@ -97,9 +108,12 @@ export function Storage({
                       ifMatch: version,
                   };
 
-            const result = await backend(con, name).uploadData(encrypted, {
-                conditions,
-            });
+            const result = await backend(con, `${user}-${name}`).uploadData(
+                encrypted,
+                {
+                    conditions,
+                }
+            );
             console.log("actual version", result.etag);
             return result.etag!;
         },
@@ -110,6 +124,25 @@ export function Storage({
             {!key || !con || showConfig ? (
                 <div className="storage-options">
                     <form>
+                        <h2>
+                            <label htmlFor="user-name">User Name</label>
+                        </h2>
+                        <p>
+                            <input
+                                name="user-name"
+                                id="user-name"
+                                value={editingUser}
+                                onChange={e => setEditingUser(e.target.value)}
+                            />
+                        </p>
+                        <p>
+                            <button onClick={() => setUser(editingUser)}>
+                                Save
+                            </button>
+                            <button onClick={() => setEditingUser(user)}>
+                                Revert
+                            </button>
+                        </p>
                         <h2>
                             <label htmlFor="encryption-key">
                                 Encryption key
@@ -153,13 +186,12 @@ export function Storage({
                                 </>
                             )}
                         </p>
-                        <hr />
-                        <p>
-                            <button onClick={() => setShowConfig(false)}>
-                                Back
-                            </button>
-                        </p>
                     </form>
+                    <p>
+                        <button onClick={() => setShowConfig(false)}>
+                            Back
+                        </button>
+                    </p>
                 </div>
             ) : (
                 <>

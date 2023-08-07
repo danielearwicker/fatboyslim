@@ -1,11 +1,11 @@
 import {
     addDays,
-    categories,
     dateDiff,
     FatboyData,
     getComestibleMap,
-    getDayFacts,
     getFacts,
+    startOfMonth,
+    startOfWeek,
     sum,
     today,
 } from "./data";
@@ -15,6 +15,26 @@ import { NumberStat } from "./NumberStat";
 import { useState } from "react";
 import { LineSeries } from "react-vis";
 import { getDailyLimit } from "./ProgressBar";
+
+interface TypedSelectProps<T extends string> {
+    options: Record<T, unknown>;
+    value: T;
+    onChange(v: T): void;
+}
+
+function TypedSelect<T extends string>({
+    options,
+    value,
+    onChange,
+}: TypedSelectProps<T>) {
+    return (
+        <select value={value} onChange={e => onChange(e.target.value as T)}>
+            {Object.keys(options).map(type => (
+                <option>{type}</option>
+            ))}
+        </select>
+    );
+}
 
 export interface StatsProps {
     state: FatboyData;
@@ -47,7 +67,44 @@ export function Stats({ state }: StatsProps) {
     const facts = getFacts(filteredState, comestibles);
     const totalCalories = sum(facts.map(x => x.calories));
     const totalRedMeat = sum(facts.map(x => x.redMeat ?? 0));
+    const totalSugar = sum(facts.map(x => x.sugar ?? 0));
+    const totalAlcohol = sum(facts.map(x => x.alcohol ?? 0));
     const dayCount = filteredState.days.length || 1;
+
+    type Fact = typeof facts[number];
+
+    const measures = {
+        calories: (f: Fact) => f.calories,
+        "sugar (g)": (f: Fact) => f.sugar,
+        "red meat (g)": (f: Fact) => f.redMeat,
+        "alcohol (units)": (f: Fact) => f.alcohol,
+    };
+
+    const segments = {
+        meal: (f: Fact) => f.meal,
+        category: (f: Fact) => f.category,
+        comestible: (f: Fact) => getLabel(f.comestible),
+    };
+
+    const dates = {
+        day: (f: Fact) => f.date,
+        week: (f: Fact) => startOfWeek(f.date),
+        month: (f: Fact) => startOfMonth(f.date),
+    };
+
+    const bars = {
+        ...dates,
+        ...segments,
+    };
+
+    const [measure, setMeasure] = useState<keyof typeof measures>("calories");
+    const [bar, setBar] = useState<keyof typeof bars>("day");
+    const [segment, setSegment] = useState<keyof typeof segments>("meal");
+
+    const isDate = Object.keys(dates).includes(bar);
+
+    const showLine =
+        measure === "calories" && bar === "day" && segment === "meal";
 
     return (
         <div className="stats">
@@ -72,89 +129,51 @@ export function Stats({ state }: StatsProps) {
                     value={totalRedMeat / dayCount}
                     label="red meat (g)"
                 />
+                <NumberStat value={totalSugar / dayCount} label="sugar (g)" />
+                <NumberStat value={totalAlcohol / dayCount} label="alcohol" />
+            </div>
+
+            <div className="chart-config">
+                <TypedSelect<keyof typeof measures>
+                    value={measure}
+                    options={measures}
+                    onChange={setMeasure}
+                />
+                <span>by</span>
+                <TypedSelect<keyof typeof bars>
+                    value={bar}
+                    options={bars}
+                    onChange={setBar}
+                />
+                <span>and</span>
+                <TypedSelect<keyof typeof segments>
+                    value={segment}
+                    options={segments}
+                    onChange={setSegment}
+                />
             </div>
 
             <StackedBar
-                title="history"
-                sort="bar"
-                source={filteredState.days.flatMap(day =>
-                    getDayFacts(day, comestibles).map(fact => ({
-                        bar: day.date,
-                        segment: fact.meal,
-                        value: fact.calories,
-                    }))
-                )}>
-                <LineSeries
-                    data={filteredState.days.flatMap((day, i) => ({
-                        y: i,
-                        x: getDailyLimit(day.date),
-                    }))}
-                    color="blue"
-                    opacity={0.3}
-                />
-            </StackedBar>
-
-            <StackedBar
-                title="red meat (g)"
-                sort="bar"
-                source={filteredState.days.flatMap(day =>
-                    getDayFacts(day, comestibles).map(fact => ({
-                        bar: day.date,
-                        segment: getLabel(fact.comestible),
-                        value: fact.redMeat,
-                    }))
-                )}
-            />
-
-            <StackedBar
-                title="comestibles (calories)"
-                source={facts.map(x => ({
-                    bar: getLabel(x.comestible),
-                    segment: x.meal,
-                    value: x.calories / dayCount,
-                }))}
-            />
-
-            <StackedBar
-                title="comestibles (per week)"
-                source={facts.map(x => ({
-                    bar: getLabel(x.comestible),
-                    segment: x.meal,
-                    value: 7 / dayCount,
-                }))}
-            />
-
-            <StackedBar
-                title="meals"
-                source={facts.map(x => ({
-                    bar: x.meal,
-                    segment: "calories",
-                    value: x.calories / dayCount,
-                }))}
-            />
-
-            <StackedBar
-                title="categories"
-                source={facts.map(x => ({
-                    bar: x.category,
-                    segment: getLabel(x.comestible),
-                    value: x.calories / dayCount,
-                }))}
-            />
-
-            {categories.map(category => (
-                <StackedBar
-                    key={category}
-                    title={category}
-                    source={facts
-                        .filter(x => x.category === category)
-                        .map(x => ({
-                            bar: getLabel(x.comestible),
-                            segment: x.meal,
-                            value: x.calories / dayCount,
+                sort={isDate ? "bar" : "value"}
+                source={facts.map(fact => ({
+                    bar: bars[bar](fact),
+                    segment: segments[segment](fact),
+                    value: isDate
+                        ? measures[measure](fact)
+                        : measures[measure](fact) / dayCount,
+                    date: isDate ? fact.date : "none",
+                }))}>
+                {showLine && (
+                    <LineSeries
+                        data={filteredState.days.flatMap((day, i) => ({
+                            y: i,
+                            x: getDailyLimit(day.date),
                         }))}
-                />
-            ))}
+                        color="blue"
+                        opacity={0.3}
+                    />
+                )}
+            </StackedBar>
         </div>
     );
 }

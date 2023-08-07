@@ -27,7 +27,7 @@
     "scripts": {
         "start": "rm -rf dist && rm -rf .parcel-cache && parcel index.html -p 6736",
         "build": "rm -rf dist && rm -rf .parcel-cache && parcel build --dist-dir dist index.html",
-        "deploy": "az storage blob upload-batch -d '$web' --account-name drefatboyslim -s dist --overwrite",
+        "deploy": "az storage blob upload-batch -d '$web' --account-name earapps -s dist --overwrite",
         "bd": "npm run build && npm run deploy"
     },
     "browserslist": [

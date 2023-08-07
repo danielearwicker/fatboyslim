@@ -22,6 +22,8 @@ export type Comestible = Readonly<{
     calories: number;
     category: Category;
     redMeat: number;
+    sugar?: number;
+    alcohol?: number;
 }>;
 
 export function probabilityOfAGivenB<T>(
@@ -120,29 +122,51 @@ export type Ate = Readonly<{
     quantity: number;
 }>;
 
+// ISO format, but cannot use toISOString which returns UTC. We want local TZ date
 export function isoDate(d: Date) {
     if (typeof d === "number") {
         const s = `${d}`;
         return `${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6)}`;
     }
-    return d.toISOString().substring(0, 10);
+
+    const month = `${d.getMonth() + 1}`.padStart(2, "0");
+    const day = `${d.getDate()}`.padStart(2, "0");
+    return `${d.getFullYear()}-${month}-${day}`;
+}
+
+export function fromIsoDate(d: string) {
+    return new Date(`${d}T00:00:00`);
 }
 
 export function addDays(date: string, add: number) {
-    const d = new Date(date);
-    d.setDate(d.getDate() + add);
-    return isoDate(d);
+    const d = fromIsoDate(date);
+    return isoDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + add));
 }
 
 export function dateDiff(date1: string, date2: string) {
+    // construct as UTC deliberately to simplify day diff!
     const d1 = new Date(date1),
         d2 = new Date(date2);
 
-    return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
+    return Math.round((d2.getTime() - d1.getTime()) / 86400000);
 }
 
 export function today(): string {
     return isoDate(new Date());
+}
+
+export function startOfWeek(d: string) {
+    const date = fromIsoDate(d),
+        day = date.getDay();
+
+    date.setDate(date.getDate() - (day >= 1 ? day - 1 : 6));
+    date.setHours(0, 0, 0, 0);
+    return isoDate(date);
+}
+
+export function startOfMonth(d: string) {
+    const date = fromIsoDate(d);
+    return isoDate(new Date(date.getFullYear(), date.getMonth(), 1));
 }
 
 export type Day = Readonly<{
@@ -194,15 +218,20 @@ export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
             category: "other",
             calories: 0,
             redMeat: 0,
+            sugar: 0,
+            alcohol: 0,
             comestible: a.comestible,
             meal: a.meal,
         };
 
         return {
+            date: day.date,
             category: c.category,
             quantity: a.quantity,
             calories: c.calories * a.quantity,
             redMeat: c.redMeat * a.quantity,
+            sugar: (c.sugar ?? 0) * a.quantity,
+            alcohol: (c.alcohol ?? 0) * a.quantity,
             comestible: c.id,
             meal: a.meal,
         };
@@ -216,6 +245,8 @@ export function getFacts(
     return state.days.flatMap(d => getDayFacts(d, comestibles));
 }
 
-export function formatNumber(value: number, precision = 1) {
-    return value.toFixed(precision).replace(/\.0+$/, "");
+export function formatNumber(value: number) {
+    return value > 1
+        ? value.toFixed(1).replace(/\.0+$/, "")
+        : value.toPrecision(2);
 }

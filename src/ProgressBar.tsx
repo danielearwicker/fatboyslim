@@ -8,6 +8,8 @@ type DailyLimitPeriod = {
 };
 
 export const dailyLimitPeriods: DailyLimitPeriod[] = [
+    { startDate: "2023-08-07", limit: 2200 },
+    { startDate: "2023-02-12", limit: 2000 },
     { startDate: "2022-12-10", limit: 1900 },
     { startDate: "2022-08-10", limit: 1800 },
 ];

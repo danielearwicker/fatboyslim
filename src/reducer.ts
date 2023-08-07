@@ -44,6 +44,8 @@ export type FatboyAction =
           calories: number;
           category: Category;
           redMeat: number;
+          sugar: number;
+          alcohol: number;
           meal: Meal;
       }
     | {
@@ -56,6 +58,8 @@ export type FatboyAction =
           comestible: string;
           calories: number;
           redMeat: number;
+          sugar: number;
+          alcohol: number;
           newName: string;
       }
     | {
@@ -166,6 +170,8 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                         calories: action.calories,
                         category: action.category,
                         redMeat: 0,
+                        sugar: 0,
+                        alcohol: 0,
                     });
 
                     let day = draft.days.find(x => x.date === draft.editingDay);
@@ -198,6 +204,8 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                 if (c) {
                     c.calories = action.calories;
                     c.redMeat = action.redMeat;
+                    c.sugar = action.sugar;
+                    c.alcohol = action.alcohol;
                     c.label = action.newName;
                 }
             });

@@ -1,16 +1,8 @@
 import { useState } from "react";
-import { addDays, FatboyData, MeasurementType, measurementTypes } from "./data";
+import { FatboyData, MeasurementType, measurementTypes } from "./data";
 import { FatboyAction } from "./reducer";
-import {
-    LineSeries,
-    MarkSeries,
-    MarkSeriesPoint,
-    VerticalGridLines,
-    XAxis,
-    XYPlot,
-    YAxis,
-} from "react-vis";
 import { DatePicker } from "./DatePicker";
+import { StackedBar } from "./StackedBar";
 
 export interface BodyProps {
     state: FatboyData;
@@ -23,33 +15,16 @@ export function Body({ state, dispatch }: BodyProps) {
     const orderedMeasurements = state.measurements.slice();
     orderedMeasurements.sort((l, r) => l.date.localeCompare(r.date));
 
-    const orderedDates = orderedMeasurements.map(x => x.date);
-
-    const dates: string[] = [];
-
-    const numbersByDate: { [date: string]: number } = {};
-
-    if (orderedDates.length > 0) {
-        const stopDate = addDays(orderedDates[orderedDates.length - 1], 1);
-        for (let d = orderedDates[0]; d != stopDate; d = addDays(d, 1)) {
-            numbersByDate[d] = dates.length;
-            dates.push(d);
+    // Remove duplicate entries for same day
+    for (let n = 0; n < orderedMeasurements.length - 1; n++) {
+        if (orderedMeasurements[n].date === orderedMeasurements[n + 1].date) {
+            orderedMeasurements.splice(n, 1);
+            n--;
         }
     }
 
-    const waistData = orderedMeasurements
-        .filter(m => m.type === "Waist/cm")
-        .map(m => ({
-            x: numbersByDate[m.date],
-            y: m.value,
-        }));
-
-    const weightData = orderedMeasurements
-        .filter(m => m.type === "Weight/kg")
-        .map(m => ({
-            x: numbersByDate[m.date],
-            y: m.value,
-        }));
+    const waistData = orderedMeasurements.filter(m => m.type === "Waist/cm");
+    const weightData = orderedMeasurements.filter(m => m.type === "Weight/kg");
 
     function fetchValue(day: string, type: MeasurementType) {
         const m = orderedMeasurements.find(
@@ -73,24 +48,6 @@ export function Body({ state, dispatch }: BodyProps) {
                 value: parseFloat(value),
             });
         }
-    }
-
-    function dateTickFormat(numeric: number) {
-        const date = new Date(dates[numeric]);
-        const dom = date.getDate();
-        if (dom == 1) {
-            return date.toLocaleString("default", { month: "short" });
-        }
-        if (dom === 10 || dom === 20) {
-            return `${dom}`;
-        }
-        return "";
-    }
-
-    function onClickPoint(point: MarkSeriesPoint) {
-        const date = dates[point.x as number];
-        dispatch({ type: "SET_EDITING_DATE", date });
-        setValue(fetchValue(date, type));
     }
 
     const showData = type === "Waist/cm" ? waistData : weightData;
@@ -124,19 +81,15 @@ export function Body({ state, dispatch }: BodyProps) {
                     </div>
                 </div>
                 <div className="history">
-                    <XYPlot width={400} height={400}>
-                        <VerticalGridLines />
-                        <XAxis
-                            tickFormat={dateTickFormat}
-                            tickTotal={dates.length}
-                        />
-                        <YAxis />
-                        <LineSeries data={showData} />
-                        <MarkSeries
-                            data={showData}
-                            onValueClick={onClickPoint}
-                        />
-                    </XYPlot>
+                    <StackedBar
+                        title={type}
+                        sort="bar"
+                        source={showData.map(fact => ({
+                            bar: fact.date,
+                            segment: type,
+                            value: fact.value,
+                        }))}
+                    />
                 </div>
             </div>
         </>

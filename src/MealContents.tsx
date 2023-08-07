@@ -5,7 +5,14 @@ import { FatboyAction } from "./reducer";
 
 export interface MealProps {
     meal: Meal;
-    ate: { id: string; label: string; calories: number; quantity: number }[];
+    ate: {
+        id: string;
+        label: string;
+        calories: number;
+        sugar: number;
+        alcohol: number;
+        quantity: number;
+    }[];
     stats: {
         caloriesAverage: number;
     };
@@ -38,7 +45,11 @@ export const MealContents = ({
             </div>
             <div className="ate">
                 {ate.map(c => (
-                    <div key={c.id} className="comestible">
+                    <div
+                        key={c.id}
+                        className={`comestible${c.sugar ? " sugar" : ""}${
+                            c.alcohol ? " alcohol" : ""
+                        }`}>
                         <span className="calories">{c.calories}</span>
                         <span className="name">{c.label}</span>
                         <span

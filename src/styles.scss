@@ -98,6 +98,10 @@ body,
     overflow: auto;
 }
 
+.measurements .history {
+    margin-top: 0.5em;
+}
+
 .day {
     padding-top: 0;
     padding-bottom: 0;
@@ -159,6 +163,10 @@ body,
 
         > * {
             vertical-align: middle;
+        }
+
+        &.sugar {
+            border: 2px dashed cyan;
         }
 
         .calories {
@@ -231,6 +239,13 @@ body,
             margin: 0 1em;
         }
     }
+
+    .chart-config {
+        span {
+            font-size: 0.8em;
+            padding: 0 0.5em;
+        }
+    }
 }
 
 .stat-box {
@@ -279,7 +294,9 @@ body,
         box-shadow: silver 5px 5px 5px;
 
         .calories,
-        .red-meat {
+        .red-meat,
+        .sugar,
+        .alcohol {
             padding-left: 1em;
             font-style: italic;
             color: darkgrey;
@@ -287,6 +304,10 @@ body,
 
         &.red-meat {
             background: pink;
+        }
+
+        &.sugar {
+            background: #def;
         }
 
         label {

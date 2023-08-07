@@ -12,9 +12,14 @@ export interface ConfigProps {
 export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("latest");
+    const [descending, setDescending] = useState(true);
+    const [category, setCategory] = useState("");
+
     const [editing, setEditing] = useState("");
     const [calories, setCalories] = useState("");
     const [redMeat, setRedMeat] = useState("");
+    const [sugar, setSugar] = useState("");
+    const [alcohol, setAlcohol] = useState("");
     const [name, setName] = useState("");
 
     const sorted = state.comestibles.slice(0);
@@ -22,19 +27,27 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     if (sort === "alpha") {
         sorted.sort((l, r) => l.label.localeCompare(r.label));
     } else if (sort === "calories") {
-        sorted.sort((l, r) => r.calories - l.calories);
+        sorted.sort((l, r) => l.calories - r.calories);
     } else if (sort === "category") {
         sorted.sort((l, r) => l.category.localeCompare(r.category));
-    } else if (sort === "latest") {
+    }
+
+    if (descending) {
         sorted.reverse();
     }
 
+    const filteredByCategory = !category
+        ? sorted
+        : sorted.filter(x => x.category === category);
+
     const filtered =
         search.trim().length === 0
-            ? sorted
-            : searchComestibles(sorted, search, Number.MAX_VALUE).map(
-                  x => x.comestible
-              );
+            ? filteredByCategory
+            : searchComestibles(
+                  filteredByCategory,
+                  search,
+                  Number.MAX_VALUE
+              ).map(x => x.comestible);
 
     return (
         <div className="config">
@@ -49,16 +62,49 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                 <option value="calories">Sort by calories</option>
                 <option value="category">Sort by category</option>
             </select>
+            <select
+                value={descending ? "desc" : "asc"}
+                onChange={e => setDescending(e.target.value === "desc")}>
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+            <select
+                className="category"
+                value={category}
+                onChange={e => setCategory(e.target.value)}>
+                <option key={""} value="">
+                    All
+                </option>
+                {categories.map(cat => (
+                    <option key={cat}>{cat}</option>
+                ))}
+            </select>
             {filtered.map(c => (
                 <div
                     key={c.id}
-                    className={`comestible ${c.redMeat ? " red-meat" : ""}`}>
+                    className={`comestible${
+                        c.redMeat
+                            ? " red-meat"
+                            : c.sugar
+                            ? " sugar"
+                            : c.alcohol
+                            ? " alcohol"
+                            : ""
+                    }`}>
                     <div>
                         <span className="name">{c.label}</span>
                         <span className="calories">{c.calories} kCal</span>
                         {!!c.redMeat && (
                             <span className="red-meat">
                                 {c.redMeat}g red meat
+                            </span>
+                        )}
+                        {!!c.sugar && (
+                            <span className="sugar">{c.sugar}g sugar</span>
+                        )}
+                        {!!c.alcohol && (
+                            <span className="alcohol">
+                                {c.alcohol}u alcohol
                             </span>
                         )}
                     </div>
@@ -81,6 +127,8 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                             onClick={() => {
                                 setCalories(`${c.calories}`);
                                 setRedMeat(`${c.redMeat}`);
+                                setSugar(`${c.sugar}`);
+                                setAlcohol(`${c.alcohol}`);
                                 setName(c.label);
                                 setEditing(c.id);
                             }}>
@@ -119,10 +167,32 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                 />
                             </div>
                             <div>
+                                <label>Sugar (g)</label>
+                                <input
+                                    type="number"
+                                    className="sugar"
+                                    placeholder="Sugar"
+                                    value={sugar}
+                                    onChange={e => setSugar(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label>Alcohol (units)</label>
+                                <input
+                                    type="number"
+                                    className="alcohol"
+                                    placeholder="Alcohol"
+                                    value={alcohol}
+                                    onChange={e => setAlcohol(e.target.value)}
+                                />
+                            </div>
+                            <div>
                                 <button
                                     disabled={
                                         isNaN(parseFloat(calories)) ||
-                                        isNaN(parseFloat(redMeat))
+                                        isNaN(parseFloat(redMeat)) ||
+                                        isNaN(parseFloat(sugar)) ||
+                                        isNaN(parseFloat(alcohol))
                                     }
                                     onClick={() => {
                                         dispatch({
@@ -130,6 +200,8 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                             comestible: editing,
                                             calories: parseFloat(calories),
                                             redMeat: parseFloat(redMeat),
+                                            sugar: parseFloat(sugar),
+                                            alcohol: parseFloat(alcohol),
                                             newName: name,
                                         });
                                         setEditing("");
@@ -147,7 +219,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                             .filter(x => x.ate.some(a => a.comestible === c.id))
                             .sortBy(x => x.date)
                             .reverse()
-                            .slice(0, 3)
+                            .slice(0, 8)
                             .map(x => (
                                 <span
                                     className="ate"
