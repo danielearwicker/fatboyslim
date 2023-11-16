@@ -53,7 +53,8 @@ function getParts(str: string) {
     return str
         .toLowerCase()
         .replace(/[^\w\s]/g, "")
-        .split(" ");
+        .split(" ")
+        .filter(x => !!x);
 }
 
 function compareStrings(within: string, find: string) {
