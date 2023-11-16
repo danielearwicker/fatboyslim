@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { categories, Category, FatboyData, searchComestibles } from "./data";
 import { FatboyAction } from "./reducer";
 import { chain as _ } from "underscore";
@@ -7,10 +7,36 @@ export interface ConfigProps {
     state: FatboyData;
     dispatch: React.Dispatch<FatboyAction>;
     showEditingDay(): void;
+    search: string;
+    setSearch(name: string): void;
 }
 
-export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
-    const [search, setSearch] = useState("");
+export function Comestibles({
+    state,
+    dispatch,
+    showEditingDay,
+    search,
+    setSearch,
+}: ConfigProps) {
+    const daysByComestible = useMemo(() => {
+        const result: { [id: string]: string[] } = {};
+
+        for (const day of state.days) {
+            for (const a of day.ate) {
+                const days =
+                    result[a.comestible] ?? (result[a.comestible] = []);
+                days.push(day.date);
+            }
+        }
+
+        for (const [id, days] of Object.entries(result)) {
+            days.sort();
+            days.reverse();
+        }
+
+        return result;
+    }, [state.days]);
+
     const [sort, setSort] = useState("latest");
     const [descending, setDescending] = useState(true);
     const [category, setCategory] = useState("");
@@ -20,6 +46,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
     const [redMeat, setRedMeat] = useState("");
     const [sugar, setSugar] = useState("");
     const [alcohol, setAlcohol] = useState("");
+    const [satch, setSatch] = useState("");
     const [name, setName] = useState("");
 
     const sorted = state.comestibles.slice(0);
@@ -30,6 +57,14 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
         sorted.sort((l, r) => l.calories - r.calories);
     } else if (sort === "category") {
         sorted.sort((l, r) => l.category.localeCompare(r.category));
+    } else if (sort === "satch") {
+        sorted.sort((l, r) => (l.satch ?? 0) - (r.satch ?? 0));
+    } else if (sort === "eaten") {
+        sorted.sort((l, r) => {
+            const lDate = daysByComestible[l.id]?.[0] ?? "2000-01-01";
+            const rDate = daysByComestible[r.id]?.[0] ?? "2000-01-01";
+            return lDate.localeCompare(rDate);
+        });
     }
 
     if (descending) {
@@ -56,11 +91,14 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
             />
+            <br />
             <select value={sort} onChange={e => setSort(e.target.value)}>
                 <option value="alpha">Sort alphabetically</option>
                 <option value="latest">Sort latest first</option>
                 <option value="calories">Sort by calories</option>
                 <option value="category">Sort by category</option>
+                <option value="eaten">Sort by last eaten</option>
+                <option value="satch">Sort by satch</option>
             </select>
             <select
                 value={descending ? "desc" : "asc"}
@@ -93,19 +131,18 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                     }`}>
                     <div>
                         <span className="name">{c.label}</span>
-                        <span className="calories">{c.calories} kCal</span>
+                        <span className="component">⚡️ {c.calories} kCal</span>
                         {!!c.redMeat && (
-                            <span className="red-meat">
-                                {c.redMeat}g red meat
-                            </span>
+                            <span className="component">🥩 {c.redMeat}g</span>
                         )}
                         {!!c.sugar && (
-                            <span className="sugar">{c.sugar}g sugar</span>
+                            <span className="component">🦷 {c.sugar}g</span>
                         )}
                         {!!c.alcohol && (
-                            <span className="alcohol">
-                                {c.alcohol}u alcohol
-                            </span>
+                            <span className="component">🍺 {c.alcohol}u</span>
+                        )}
+                        {!!c.satch && (
+                            <span className="component">💔 {c.satch}g</span>
                         )}
                     </div>
                     <select
@@ -125,10 +162,11 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                     {!editing && (
                         <button
                             onClick={() => {
-                                setCalories(`${c.calories}`);
-                                setRedMeat(`${c.redMeat}`);
-                                setSugar(`${c.sugar}`);
-                                setAlcohol(`${c.alcohol}`);
+                                setCalories(`${c.calories ?? 0}`);
+                                setRedMeat(`${c.redMeat ?? 0}`);
+                                setSugar(`${c.sugar ?? 0}`);
+                                setAlcohol(`${c.alcohol ?? 0}`);
+                                setSatch(`${c.satch ?? 0}`);
                                 setName(c.label);
                                 setEditing(c.id);
                             }}>
@@ -138,7 +176,6 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                     {editing === c.id && (
                         <div className="editing">
                             <div>
-                                <label>Name</label>
                                 <input
                                     className="name"
                                     placeholder="Name"
@@ -147,7 +184,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                 />
                             </div>
                             <div>
-                                <label>Calories</label>
+                                <label>⚡️</label>
                                 <input
                                     type="number"
                                     className="calories"
@@ -155,9 +192,10 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                     value={calories}
                                     onChange={e => setCalories(e.target.value)}
                                 />
+                                kCal
                             </div>
                             <div>
-                                <label>Red meat (g)</label>
+                                <label>🥩</label>
                                 <input
                                     type="number"
                                     className="red-meat"
@@ -165,9 +203,10 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                     value={redMeat}
                                     onChange={e => setRedMeat(e.target.value)}
                                 />
+                                g
                             </div>
                             <div>
-                                <label>Sugar (g)</label>
+                                <label>🦷</label>
                                 <input
                                     type="number"
                                     className="sugar"
@@ -175,9 +214,10 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                     value={sugar}
                                     onChange={e => setSugar(e.target.value)}
                                 />
+                                g
                             </div>
                             <div>
-                                <label>Alcohol (units)</label>
+                                <label>🍺</label>
                                 <input
                                     type="number"
                                     className="alcohol"
@@ -185,6 +225,18 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                     value={alcohol}
                                     onChange={e => setAlcohol(e.target.value)}
                                 />
+                                units
+                            </div>
+                            <div>
+                                <label>💔</label>
+                                <input
+                                    type="number"
+                                    className="sugar"
+                                    placeholder="Satch"
+                                    value={satch}
+                                    onChange={e => setSatch(e.target.value)}
+                                />
+                                g
                             </div>
                             <div>
                                 <button
@@ -192,7 +244,8 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                         isNaN(parseFloat(calories)) ||
                                         isNaN(parseFloat(redMeat)) ||
                                         isNaN(parseFloat(sugar)) ||
-                                        isNaN(parseFloat(alcohol))
+                                        isNaN(parseFloat(alcohol)) ||
+                                        isNaN(parseFloat(satch))
                                     }
                                     onClick={() => {
                                         dispatch({
@@ -202,6 +255,7 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                                             redMeat: parseFloat(redMeat),
                                             sugar: parseFloat(sugar),
                                             alcohol: parseFloat(alcohol),
+                                            satch: parseFloat(satch),
                                             newName: name,
                                         });
                                         setEditing("");
@@ -215,26 +269,20 @@ export function Comestibles({ state, dispatch, showEditingDay }: ConfigProps) {
                         </div>
                     )}
                     <div className="days">
-                        {_(state.days)
-                            .filter(x => x.ate.some(a => a.comestible === c.id))
-                            .sortBy(x => x.date)
-                            .reverse()
-                            .slice(0, 8)
-                            .map(x => (
-                                <span
-                                    className="ate"
-                                    key={x.date}
-                                    onClick={() => {
-                                        dispatch({
-                                            type: "SET_EDITING_DATE",
-                                            date: x.date,
-                                        });
-                                        showEditingDay();
-                                    }}>
-                                    {x.date}
-                                </span>
-                            ))
-                            .value()}
+                        {(daysByComestible[c.id] ?? []).slice(0, 8).map(x => (
+                            <span
+                                className="ate"
+                                key={x}
+                                onClick={() => {
+                                    dispatch({
+                                        type: "SET_EDITING_DATE",
+                                        date: x,
+                                    });
+                                    showEditingDay();
+                                }}>
+                                {x}
+                            </span>
+                        ))}
                     </div>
                 </div>
             ))}

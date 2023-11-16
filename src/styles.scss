@@ -9,6 +9,15 @@ body,
     margin: 0;
     height: 100%;
     overflow: hidden;
+    background: black;
+    color: white;
+}
+
+input,
+select {
+    -webkit-appearance: none;
+    background-color: #444;
+    color: #ddd;
 }
 
 .app {
@@ -22,7 +31,7 @@ body,
     flex: 0 0 auto;
     font-size: 0.5em;
     padding: 0.5em;
-    background-color: black;
+    background-color: #333;
     color: white;
     text-align: right;
 
@@ -110,35 +119,35 @@ body,
 .calorie-bar {
     margin: 0.5em;
     border-radius: 0.5em;
-    background: burlywood;
+    background: #555;
     position: relative;
 
     .progress {
         height: 1.2em;
-        background: pink;
+        background: #b69;
         border-radius: 0.5em;
     }
 
+    .remaining,
     .ate {
         position: absolute;
-        left: 5px;
-        top: 0.1em;
-        color: white;
+        top: 1px;
+    }
+
+    .ate {
+        left: 7px;
     }
 
     .remaining {
-        position: absolute;
-        right: 5px;
-        top: 0.1em;
+        right: 7px;
     }
 }
 
 .meal {
     margin-bottom: 1em;
     padding: 0.5em;
-    background: beige;
+    background: #357;
     border-radius: 0.5em;
-    box-shadow: silver 5px 5px 5px;
 
     .meal-heading {
         display: flex;
@@ -170,7 +179,7 @@ body,
         }
 
         .calories {
-            padding-right: 0.2em;
+            padding: 0 0.2em;
             color: darkorange;
         }
 
@@ -260,7 +269,7 @@ body,
         text-align: center;
         display: inline-block;
         margin: 0 1em 1em 0;
-        background: #eee;
+        background: #333;
         padding: 1em;
         border-radius: 0.5em;
 
@@ -279,6 +288,12 @@ body,
         padding: 0.5em;
         border-radius: 0.5em;
     }
+
+    text,
+    span.rv-discrete-color-legend-item__title {
+        color: #bbb;
+        fill: #bbb;
+    }
 }
 
 .config {
@@ -286,28 +301,25 @@ body,
         font-size: 1.5em;
     }
 
+    select {
+        margin-right: 1em;
+        padding: 0.2em;
+        font-size: 0.6em;
+    }
+
     .comestible {
         margin: 1em 0;
         padding: 0.5em;
-        background: cornsilk;
+        background: #333;
         border-radius: 0.5em;
-        box-shadow: silver 5px 5px 5px;
 
-        .calories,
-        .red-meat,
-        .sugar,
-        .alcohol {
-            padding-left: 1em;
-            font-style: italic;
+        .component {
+            display: inline-block;
             color: darkgrey;
-        }
-
-        &.red-meat {
-            background: pink;
-        }
-
-        &.sugar {
-            background: #def;
+            background-color: #444;
+            padding: 0 0.4em;
+            margin: 0.2em;
+            border-radius: 0.5em;
         }
 
         label {
@@ -317,6 +329,25 @@ body,
         input,
         button {
             font-size: 1em;
+        }
+
+        .editing {
+            div {
+                margin: 5px 0;
+            }
+
+            input {
+                width: 5em;
+                margin-right: 4px;
+
+                &.name {
+                    width: 90%;
+                }
+            }
+
+            button {
+                margin-right: 0.5em;
+            }
         }
 
         .days {
@@ -380,6 +411,8 @@ body,
         position: absolute;
         inset: 0.5em;
         font-size: 1em;
+        background: black;
+        color: white;
     }
 }
 

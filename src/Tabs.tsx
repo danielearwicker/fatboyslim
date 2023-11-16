@@ -13,6 +13,12 @@ export const Tabs = memo(() => {
     const [state, dispatch] = useFatboyStorage();
 
     const [tab, setTab] = useState<Tab>("day");
+    const [search, setSearch] = useState<string>("");
+
+    function showComestible(name: string) {
+        setSearch(name);
+        setTab("comestibles");
+    }
 
     const counts: Partial<Record<Tab, number>> = {
         comestibles: state.comestibles.filter(x => x.category === "other")
@@ -35,7 +41,11 @@ export const Tabs = memo(() => {
                 ))}
             </div>
             {tab === "day" ? (
-                <DayEditor state={state} dispatch={dispatch} />
+                <DayEditor
+                    state={state}
+                    dispatch={dispatch}
+                    showComestible={showComestible}
+                />
             ) : tab === "stats" ? (
                 <Stats state={state} />
             ) : tab === "comestibles" ? (
@@ -43,6 +53,8 @@ export const Tabs = memo(() => {
                     state={state}
                     dispatch={dispatch}
                     showEditingDay={() => setTab("day")}
+                    search={search}
+                    setSearch={setSearch}
                 />
             ) : tab === "body" ? (
                 <Body state={state} dispatch={dispatch} />

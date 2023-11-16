@@ -46,6 +46,7 @@ export type FatboyAction =
           redMeat: number;
           sugar: number;
           alcohol: number;
+          satch: number;
           meal: Meal;
       }
     | {
@@ -60,6 +61,7 @@ export type FatboyAction =
           redMeat: number;
           sugar: number;
           alcohol: number;
+          satch: number;
           newName: string;
       }
     | {
@@ -172,6 +174,7 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                         redMeat: 0,
                         sugar: 0,
                         alcohol: 0,
+                        satch: 0,
                     });
 
                     let day = draft.days.find(x => x.date === draft.editingDay);
@@ -206,6 +209,7 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                     c.redMeat = action.redMeat;
                     c.sugar = action.sugar;
                     c.alcohol = action.alcohol;
+                    c.satch = action.satch;
                     c.label = action.newName;
                 }
             });

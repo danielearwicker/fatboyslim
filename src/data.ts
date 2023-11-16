@@ -24,6 +24,7 @@ export type Comestible = Readonly<{
     redMeat: number;
     sugar?: number;
     alcohol?: number;
+    satch?: number;
 }>;
 
 export function probabilityOfAGivenB<T>(
@@ -220,6 +221,7 @@ export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
             redMeat: 0,
             sugar: 0,
             alcohol: 0,
+            satch: 0,
             comestible: a.comestible,
             meal: a.meal,
         };
@@ -232,6 +234,7 @@ export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {
             redMeat: c.redMeat * a.quantity,
             sugar: (c.sugar ?? 0) * a.quantity,
             alcohol: (c.alcohol ?? 0) * a.quantity,
+            satch: (c.satch ?? 0) * a.quantity,
             comestible: c.id,
             meal: a.meal,
         };

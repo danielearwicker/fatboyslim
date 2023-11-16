@@ -10,9 +10,10 @@ import { chain as _ } from "underscore";
 export interface DayEditorProps {
     state: FatboyData;
     dispatch: React.Dispatch<FatboyAction>;
+    showComestible(name: string): void;
 }
 
-export function DayEditor({ state, dispatch }: DayEditorProps) {
+export function DayEditor({ state, dispatch, showComestible }: DayEditorProps) {
     const existingDay = useMemo(
         () => state.days.find(x => x.date === state.editingDay),
         [state.days, state.editingDay]
@@ -68,7 +69,8 @@ export function DayEditor({ state, dispatch }: DayEditorProps) {
                         ate={m.ate}
                         stats={{ caloriesAverage: averageMeal[m.meal] }}
                         limit={remaining}
-                        dispatch={dispatch}>
+                        dispatch={dispatch}
+                        showComestible={showComestible}>
                         <AddComestible
                             key={`${m.meal}_add_comestible`}
                             day={day}

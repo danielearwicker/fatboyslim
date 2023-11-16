@@ -9,8 +9,10 @@ export interface MealProps {
         id: string;
         label: string;
         calories: number;
-        sugar: number;
-        alcohol: number;
+        sugar?: number;
+        redMeat?: number;
+        alcohol?: number;
+        satch?: number;
         quantity: number;
     }[];
     stats: {
@@ -18,6 +20,7 @@ export interface MealProps {
     };
     limit: number;
     dispatch: React.Dispatch<FatboyAction>;
+    showComestible(name: string): void;
     children: ReactNode;
 }
 
@@ -27,6 +30,7 @@ export const MealContents = ({
     stats,
     limit,
     dispatch,
+    showComestible,
     children,
 }: MealProps) => {
     const totalCalories = ate
@@ -45,13 +49,23 @@ export const MealContents = ({
             </div>
             <div className="ate">
                 {ate.map(c => (
-                    <div
-                        key={c.id}
-                        className={`comestible${c.sugar ? " sugar" : ""}${
-                            c.alcohol ? " alcohol" : ""
-                        }`}>
+                    <div key={c.id} className="comestible">
+                        {!!c.sugar && <span>🦷</span>}
+                        {!!c.satch && <span>💔</span>}
+                        {!!c.redMeat && <span>🥩</span>}
+                        {!!c.alcohol && <span>🍺</span>}
+                        {(c.satch === undefined ||
+                            c.sugar === undefined ||
+                            c.redMeat === undefined ||
+                            c.alcohol === undefined) && (
+                            <span className="satch">🤨</span>
+                        )}
                         <span className="calories">{c.calories}</span>
-                        <span className="name">{c.label}</span>
+                        <span
+                            className="name"
+                            onClick={() => showComestible(c.label)}>
+                            {c.label}
+                        </span>
                         <span
                             className={`quantity${
                                 c.calories > limit ? " too-much" : ""

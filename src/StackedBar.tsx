@@ -18,7 +18,7 @@ export interface StackedBarProps {
         bar: string;
         segment: string;
         value: number;
-        date: string;
+        date?: string;
     }[];
     segments?: string[];
     sort?: "bar" | "value";

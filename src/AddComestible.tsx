@@ -159,6 +159,10 @@ export const AddComestible = memo(
                             });
                             reset();
                         }}>
+                        {!!c.comestible.sugar && <span>🦷</span>}
+                        {!!c.comestible.satch && <span>💔</span>}
+                        {!!c.comestible.redMeat && <span>🥩</span>}
+                        {!!c.comestible.alcohol && <span>🍺</span>}
                         <span className="calories">
                             {c.comestible.calories}
                         </span>
@@ -182,6 +186,9 @@ export const AddComestible = memo(
                                     calories: parseFloat(calories),
                                     category: "other",
                                     redMeat: 0,
+                                    satch: 0,
+                                    alcohol: 0,
+                                    sugar: 0,
                                     meal,
                                 });
                                 reset();
