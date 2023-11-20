@@ -27,28 +27,6 @@ export type Comestible = Readonly<{
     satch?: number;
 }>;
 
-export function probabilityOfAGivenB<T>(
-    items: readonly Readonly<T>[],
-    classify: (item: Readonly<T>) => { a: boolean; b: boolean }
-) {
-    let countOnlyB = 0,
-        countAB = 0;
-
-    for (const item of items) {
-        const { a, b } = classify(item);
-        if (b) {
-            if (a) {
-                countAB++;
-            } else {
-                countOnlyB++;
-            }
-        }
-    }
-
-    const countB = countAB + countOnlyB;
-    return countB === 0 ? 0 : countAB / countB;
-}
-
 function getParts(str: string) {
     return str
         .toLowerCase()
@@ -74,7 +52,7 @@ function compareStrings(within: string, find: string) {
 
 export function sortComestibleChoices(
     choices: {
-        probability: number;
+        weight: number;
         comestible: {
             calories: number;
         };
@@ -85,7 +63,7 @@ export function sortComestibleChoices(
         const lAllowed = l.comestible.calories < limit ? 1 : 0;
         const rAllowed = r.comestible.calories < limit ? 1 : 0;
         if (lAllowed === rAllowed) {
-            return r.probability - l.probability;
+            return r.weight - l.weight;
         }
         return rAllowed - lAllowed;
     });
@@ -103,11 +81,9 @@ export function searchComestibles(
         }))
         .filter(x => x.score > 0);
 
-    const total = found.map(x => x.score).reduce((l, r) => l + r, 0);
-
     const scaled = found.map(x => ({
         ...x,
-        probability: x.score / total,
+        weight: x.score,
     }));
 
     sortComestibleChoices(scaled, limit);

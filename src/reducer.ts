@@ -37,6 +37,7 @@ export type FatboyAction =
           type: "ADD_ATE";
           meal: Meal;
           comestible: string;
+          quantity: number;
       }
     | {
           type: "ADD_COMESTIBLE";
@@ -123,11 +124,6 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                 );
                 if (ateAt === -1) return;
 
-                const ate = day.ate[ateAt];
-                ate.quantity--;
-
-                if (ate.quantity > 0) return;
-
                 day.ate.splice(ateAt, 1);
 
                 if (!day.ate.length) {
@@ -156,7 +152,7 @@ export function fatboyReducer(data: FatboyData, action: FatboyAction) {
                     day.ate.push(ate);
                 }
 
-                ate.quantity++;
+                ate.quantity = action.quantity;
             });
         case "ADD_COMESTIBLE":
             return produce(data, draft => {

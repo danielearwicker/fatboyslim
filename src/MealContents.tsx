@@ -71,13 +71,23 @@ export const MealContents = ({
                                 c.calories > limit ? " too-much" : ""
                             }`}
                             onClick={() => {
-                                dispatch({
-                                    type: "ADD_ATE",
-                                    meal,
-                                    comestible: c.id,
-                                });
+                                const newQuantity = prompt(
+                                    "Quantity",
+                                    `${c.quantity}`
+                                );
+                                if (newQuantity !== null) {
+                                    const parsed = parseFloat(newQuantity);
+                                    if (!isNaN(parsed)) {
+                                        dispatch({
+                                            type: "ADD_ATE",
+                                            meal,
+                                            comestible: c.id,
+                                            quantity: parsed,
+                                        });
+                                    }
+                                }
                             }}>
-                            {c.quantity > 1 ? `x${c.quantity}` : "+"}
+                            x{c.quantity}
                         </span>
                         <span
                             className="delete"
@@ -88,7 +98,7 @@ export const MealContents = ({
                                     comestible: c.id,
                                 })
                             }>
-                            🗑
+                            ❌
                         </span>
                     </div>
                 ))}

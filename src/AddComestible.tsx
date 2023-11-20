@@ -4,8 +4,8 @@ import {
     dateDiff,
     Day,
     FatboyData,
+    getComestibleMap,
     Meal,
-    probabilityOfAGivenB,
     searchComestibles,
     sortComestibleChoices,
 } from "./data";
@@ -65,39 +65,59 @@ export function mostOftenEatenWith(
         }
     }
 
-    const maxHits = frequencies
-        .map(x => x.hits)
-        .reduce((l, r) => (l > r ? l : r), 0);
-
     const rightAboutNow = frequencies
         .slice(0, 8)
         .map(x => ({
             comestible: x.comestible,
-            probability: x.hits / maxHits,
+            weight: x.hits,
         }))
-        .filter(x => x.probability > 0);
+        .filter(x => x.weight > 0);
 
-    const implied = state.comestibles
-        .filter(x => !ate.includes(x.id))
-        .map(comestible => ({
-            comestible,
-            probability: probabilityOfAGivenB(state.days, day => ({
-                a: day.ate.some(
-                    x => x.comestible === comestible.id && x.meal === meal
-                ),
-                b: ate.every(y =>
-                    day.ate.some(x => x.comestible === y && x.meal === meal)
-                ),
-            })),
-        }))
-        .filter(x => x.probability > 0);
+    const eatenToday: { [id: string]: boolean } = {};
+
+    for (const a of ate) {
+        eatenToday[a] = true;
+    }
+
+    const network: {
+        [id: string]: number;
+    } = {};
+
+    for (const day of state.days) {
+        for (const eatenThen of day.ate) {
+            if (eatenThen.meal === meal && eatenToday[eatenThen.comestible]) {
+                for (const eatenThenOther of day.ate) {
+                    if (
+                        eatenThenOther.meal === meal &&
+                        !eatenToday[eatenThenOther.comestible]
+                    ) {
+                        network[eatenThenOther.comestible] =
+                            (network[eatenThenOther.comestible] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    const comestiblesMap = getComestibleMap(state);
+
+    const suggestions = Object.entries(network).map(([id, weight]) => ({
+        id,
+        weight,
+    }));
+    suggestions.sort((l, r) => r.weight - l.weight);
+
+    const implied = suggestions.slice(0, 5).map(x => ({
+        comestible: comestiblesMap[x.id],
+        weight: x.weight,
+    }));
 
     const extras = state.comestibles.filter(
         x => x.calories < limit && x.category == "treat" && !ate.includes(x.id)
     );
     extras.sort((l, r) => r.calories - l.calories);
     const topExtras = extras.slice(0, 5).map(comestible => ({
-        probability: 1,
+        weight: 1,
         comestible,
     }));
 
@@ -156,6 +176,7 @@ export const AddComestible = memo(
                                 type: "ADD_ATE",
                                 meal,
                                 comestible: c.comestible.id,
+                                quantity: 1,
                             });
                             reset();
                         }}>
@@ -167,9 +188,9 @@ export const AddComestible = memo(
                             {c.comestible.calories}
                         </span>
                         <span className="name">{c.comestible.label}</span>
-                        {!!c.probability && (
-                            <span className="probability">
-                                {(c.probability * 100).toFixed(0)}%
+                        {!!c.weight && (
+                            <span className="weight">
+                                {c.weight.toFixed(2)}
                             </span>
                         )}
                     </div>
@@ -197,6 +218,7 @@ export const AddComestible = memo(
                                     type: "ADD_ATE",
                                     meal,
                                     comestible: found[0].comestible.id,
+                                    quantity: 1,
                                 });
                                 reset();
                             }
