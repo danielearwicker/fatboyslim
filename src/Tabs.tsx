@@ -1,10 +1,11 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Body } from "./Body";
 import { Comestibles } from "./Comestibles";
 import { DayEditor } from "./DayEditor";
 import { Notes } from "./Notes";
 import { useFatboyStorage } from "./reducer";
 import { Stats } from "./Stats";
+import { ComestiblesContext, generateComestibleContext } from "./data";
 
 const tabs = ["day", "stats", "comestibles", "body", "notes"] as const;
 type Tab = typeof tabs[number];
@@ -25,42 +26,49 @@ export const Tabs = memo(() => {
             .length,
     };
 
+    const comestiblesContext = useMemo(
+        () => generateComestibleContext(state.comestibles, state.days),
+        [state.comestibles, state.days]
+    );
+
     return (
-        <div className="fatboy-slim">
-            <div className="tabs">
-                {tabs.map(t => (
-                    <div
-                        key={t}
-                        className={`tab${t === tab ? " selected" : ""}`}
-                        onClick={() => setTab(t)}>
-                        {t}
-                        {(counts[t] ?? 0) > 0 && (
-                            <div className="count">{counts[t]}</div>
-                        )}
-                    </div>
-                ))}
+        <ComestiblesContext.Provider value={comestiblesContext}>
+            <div className="fatboy-slim">
+                <div className="tabs">
+                    {tabs.map(t => (
+                        <div
+                            key={t}
+                            className={`tab${t === tab ? " selected" : ""}`}
+                            onClick={() => setTab(t)}>
+                            {t}
+                            {(counts[t] ?? 0) > 0 && (
+                                <div className="count">{counts[t]}</div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {tab === "day" ? (
+                    <DayEditor
+                        state={state}
+                        dispatch={dispatch}
+                        showComestible={showComestible}
+                    />
+                ) : tab === "stats" ? (
+                    <Stats state={state} />
+                ) : tab === "comestibles" ? (
+                    <Comestibles
+                        state={state}
+                        dispatch={dispatch}
+                        showEditingDay={() => setTab("day")}
+                        search={search}
+                        setSearch={setSearch}
+                    />
+                ) : tab === "body" ? (
+                    <Body state={state} dispatch={dispatch} />
+                ) : tab === "notes" ? (
+                    <Notes state={state} dispatch={dispatch} />
+                ) : undefined}
             </div>
-            {tab === "day" ? (
-                <DayEditor
-                    state={state}
-                    dispatch={dispatch}
-                    showComestible={showComestible}
-                />
-            ) : tab === "stats" ? (
-                <Stats state={state} />
-            ) : tab === "comestibles" ? (
-                <Comestibles
-                    state={state}
-                    dispatch={dispatch}
-                    showEditingDay={() => setTab("day")}
-                    search={search}
-                    setSearch={setSearch}
-                />
-            ) : tab === "body" ? (
-                <Body state={state} dispatch={dispatch} />
-            ) : tab === "notes" ? (
-                <Notes state={state} dispatch={dispatch} />
-            ) : undefined}
-        </div>
+        </ComestiblesContext.Provider>
     );
 });

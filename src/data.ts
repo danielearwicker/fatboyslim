@@ -1,3 +1,4 @@
+import { createContext } from "react";
 import "./styles.scss";
 
 export const categories = [
@@ -185,8 +186,36 @@ export function sum(ar: number[]) {
     return ar.reduce((l, r) => l + r, 0);
 }
 
-export function getComestibleMap(state: FatboyData) {
-    return Object.fromEntries(state.comestibles.map(x => [x.id, x]));
+export type ComestibleWithQuantities = Readonly<Comestible> & {
+    readonly quantities: { [value: number]: number };
+};
+
+export type ComestiblesContext = {
+    readonly [id: string]: ComestibleWithQuantities;
+};
+
+export const ComestiblesContext = createContext<ComestiblesContext>({});
+
+export function generateComestibleContext(
+    comestibles: readonly Comestible[],
+    days: readonly Day[]
+): ComestiblesContext {
+    const result: { [id: string]: ComestibleWithQuantities } =
+        Object.fromEntries(
+            comestibles.map(x => [x.id, { ...x, quantities: {} }])
+        );
+
+    for (const day of days) {
+        for (const ate of day.ate) {
+            const c = result[ate.comestible];
+            if (c) {
+                c.quantities[ate.quantity] =
+                    (c.quantities[ate.quantity] || 0) + 1;
+            }
+        }
+    }
+
+    return result;
 }
 
 export function getDayFacts(day: Day, comestibles: Record<string, Comestible>) {

@@ -1,10 +1,10 @@
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useContext, useMemo, useState } from "react";
 import {
     Comestible,
+    ComestiblesContext,
     dateDiff,
     Day,
     FatboyData,
-    getComestibleMap,
     Meal,
     searchComestibles,
     sortComestibleChoices,
@@ -18,6 +18,24 @@ export type AddComestibleProps = Readonly<{
     limit: number;
     dispatch: React.Dispatch<FatboyAction>;
 }>;
+
+export function getLatestQuantity(state: FatboyData, comestible: string) {
+    let date = "";
+    let quantity = 1;
+
+    for (const day of state.days) {
+        if (date && day.date < date) continue;
+
+        for (const ate of day.ate) {
+            if (ate.comestible === comestible) {
+                date = day.date;
+                quantity = ate.quantity;
+            }
+        }
+    }
+
+    return quantity;
+}
 
 export function mostOftenEatenWith(
     state: FatboyData,
@@ -99,7 +117,7 @@ export function mostOftenEatenWith(
         }
     }
 
-    const comestiblesMap = getComestibleMap(state);
+    const comestiblesMap = useContext(ComestiblesContext);
 
     const suggestions = Object.entries(network).map(([id, weight]) => ({
         id,
@@ -176,7 +194,10 @@ export const AddComestible = memo(
                                 type: "ADD_ATE",
                                 meal,
                                 comestible: c.comestible.id,
-                                quantity: 1,
+                                quantity: getLatestQuantity(
+                                    state,
+                                    c.comestible.id
+                                ),
                             });
                             reset();
                         }}>

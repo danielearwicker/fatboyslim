@@ -1,8 +1,8 @@
 import {
     addDays,
+    ComestiblesContext,
     dateDiff,
     FatboyData,
-    getComestibleMap,
     getFacts,
     startOfMonth,
     startOfWeek,
@@ -12,7 +12,7 @@ import {
 import { chain as _ } from "underscore";
 import { StackedBar } from "./StackedBar";
 import { NumberStat } from "./NumberStat";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { LineSeries } from "react-vis";
 import { getDailyLimit } from "./ProgressBar";
 
@@ -41,7 +41,7 @@ export interface StatsProps {
 }
 
 export function Stats({ state }: StatsProps) {
-    const comestibles = getComestibleMap(state);
+    const comestibles = useContext(ComestiblesContext);
 
     function getLabel(c: string) {
         const label = comestibles[c]?.label;

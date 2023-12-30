@@ -1,20 +1,13 @@
 import React from "react";
 import { ReactNode } from "react";
-import { Meal } from "./data";
+import { ComestibleWithQuantities, Meal } from "./data";
 import { FatboyAction } from "./reducer";
 
 export interface MealProps {
     meal: Meal;
-    ate: {
-        id: string;
-        label: string;
-        calories: number;
-        sugar?: number;
-        redMeat?: number;
-        alcohol?: number;
-        satch?: number;
+    ate: (ComestibleWithQuantities & {
         quantity: number;
-    }[];
+    })[];
     stats: {
         caloriesAverage: number;
     };
@@ -36,6 +29,23 @@ export const MealContents = ({
     const totalCalories = ate
         .map(x => x.calories * x.quantity)
         .reduce((l, r) => l + r, 0);
+
+    function setQuantity(comestible: string, old: number, choice: string) {
+        const newQuantity =
+            choice === "other" ? prompt("Quantity", `${old}`) : choice;
+
+        if (newQuantity !== null) {
+            const parsed = parseFloat(newQuantity);
+            if (!isNaN(parsed)) {
+                dispatch({
+                    type: "ADD_ATE",
+                    meal,
+                    comestible,
+                    quantity: parsed,
+                });
+            }
+        }
+    }
 
     return (
         <div className="meal">
@@ -66,29 +76,20 @@ export const MealContents = ({
                             onClick={() => showComestible(c.label)}>
                             {c.label}
                         </span>
-                        <span
-                            className={`quantity${
-                                c.calories > limit ? " too-much" : ""
-                            }`}
-                            onClick={() => {
-                                const newQuantity = prompt(
-                                    "Quantity",
-                                    `${c.quantity}`
-                                );
-                                if (newQuantity !== null) {
-                                    const parsed = parseFloat(newQuantity);
-                                    if (!isNaN(parsed)) {
-                                        dispatch({
-                                            type: "ADD_ATE",
-                                            meal,
-                                            comestible: c.id,
-                                            quantity: parsed,
-                                        });
-                                    }
-                                }
+                        <select
+                            className="quantity"
+                            value={c.quantity}
+                            onChange={e => {
+                                setQuantity(c.id, c.quantity, e.target.value);
                             }}>
-                            x{c.quantity}
-                        </span>
+                            {Object.keys(c.quantities)
+                                .map(k => parseFloat(k))
+                                .sort((a, b) => a - b)
+                                .map(q => (
+                                    <option value={q}>{q}</option>
+                                ))}
+                            <option value="other">Other...</option>
+                        </select>
                         <span
                             className="delete"
                             onClick={() =>

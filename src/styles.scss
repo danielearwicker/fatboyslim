@@ -196,6 +196,8 @@ select {
             color: black;
             cursor: pointer;
             background: gold;
+            font-size: 0.9em;
+            width: 2em;
 
             &.too-much {
                 background-color: pink;

@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { AddComestible } from "./AddComestible";
-import { FatboyData, getComestibleMap, getFacts, meals, sum } from "./data";
+import { ComestiblesContext, FatboyData, getFacts, meals, sum } from "./data";
 import { DatePicker } from "./DatePicker";
 import { MealContents } from "./MealContents";
 import { alreadyPlanned, getDailyLimit, ProgressBar } from "./ProgressBar";
@@ -24,7 +24,7 @@ export function DayEditor({ state, dispatch, showComestible }: DayEditorProps) {
         ate: [],
     };
 
-    const comestibles = getComestibleMap(state);
+    const comestibles = useContext(ComestiblesContext);
 
     const ate = day.ate
         .map(x => ({
