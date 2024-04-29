@@ -176,6 +176,11 @@ export const AddComestible = memo(
                 : mealChoices
         ).slice(0, 10);
 
+        if (search.trim().length > 0) {
+            // put best match at bottom so it's next to search input box
+            found.reverse();
+        }
+
         function reset() {
             setSearch("");
             setCalories("");
