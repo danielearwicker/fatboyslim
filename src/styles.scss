@@ -8,9 +8,12 @@ body,
 .fatboy-slim {
     margin: 0;
     height: 100%;
+    width: 100%;
     overflow: hidden;
     background: black;
     color: white;
+    display: flex;
+    flex-direction: column;
 }
 
 input,
@@ -425,4 +428,10 @@ select {
             width: 100%;
         }
     }
+}
+
+.info {
+    text-align: right;
+    padding: 0.2em;
+    font-size: 0.8em;
 }

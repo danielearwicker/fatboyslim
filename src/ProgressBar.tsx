@@ -43,8 +43,8 @@ export const ProgressBar = memo(({ total, dailyLimit }: ProgressBarProps) => {
 
     return total > dailyLimit ? (
         <h2 className="over-the-limit">
-            You are {total - dailyLimit} ({Math.round(progress - 100)}%) over
-            your limit!
+            You are {Math.round(total - dailyLimit)} (
+            {Math.round(progress - 100)}%) over your limit!
         </h2>
     ) : (
         <div className="calorie-bar">

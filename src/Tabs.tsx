@@ -11,7 +11,7 @@ const tabs = ["day", "stats", "comestibles", "body", "notes"] as const;
 type Tab = typeof tabs[number];
 
 export const Tabs = memo(() => {
-    const [state, dispatch] = useFatboyStorage();
+    const [state, dispatch, info] = useFatboyStorage();
 
     const [tab, setTab] = useState<Tab>("day");
     const [search, setSearch] = useState<string>("");
@@ -68,6 +68,7 @@ export const Tabs = memo(() => {
                 ) : tab === "notes" ? (
                     <Notes state={state} dispatch={dispatch} />
                 ) : undefined}
+                <div className="info">{info}</div>
             </div>
         </ComestiblesContext.Provider>
     );

@@ -172,8 +172,8 @@ export function Stats({ state }: StatsProps) {
                             y: i,
                             x: getDailyLimit(day.date),
                         }))}
-                        color="blue"
-                        opacity={0.3}
+                        color="magenta"
+                        opacity={0.5}
                     />
                 )}
             </StackedBar>

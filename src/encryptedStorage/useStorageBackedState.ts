@@ -15,6 +15,8 @@ export function useStorageBackedState<T extends object, A>(
     const shouldLoad = useRef(true);
     const [shouldSave, setShouldSave] = useState(false);
 
+    const [info, setInfo] = useState("");
+
     useEffect(() => {
         async function load() {
             try {
@@ -25,7 +27,7 @@ export function useStorageBackedState<T extends object, A>(
                     ) as T;
                     dispatchWithoutSave(generateLoadAction(state));
                 }
-                console.log("Loaded version", loaded.version);
+                setInfo(`Loaded version ${loaded.version}`);
                 setVersion(loaded.version);
             } catch (e) {
                 console.error(e);
@@ -46,23 +48,23 @@ export function useStorageBackedState<T extends object, A>(
             window.clearTimeout(saveTimer.current);
         }
 
+        setInfo("Saving soon");
+
         saveTimer.current = window.setTimeout(() => setShouldSave(true), 2000);
     }
 
     useEffect(() => {
         async function reconcile() {
             try {
+                setInfo("Saving...");
                 const data = new TextEncoder().encode(JSON.stringify(state));
                 setVersion(await storage.save(name, { data, version }));
                 queuedActions.current = [];
+                setInfo("Saved successfully");
                 return;
             } catch (e) {
                 const er = e as Error;
-                console.log(
-                    `reconcile after failing based on version`,
-                    version,
-                    er.message
-                );
+                setInfo("Reconciling");
 
                 const loaded = await storage.load(name);
                 const state = loaded.data
@@ -70,11 +72,9 @@ export function useStorageBackedState<T extends object, A>(
                     : initialState;
                 dispatchWithoutSave(generateLoadAction(state));
 
-                console.log("Loaded version", loaded.version);
                 setVersion(loaded.version);
 
                 for (const action of queuedActions.current) {
-                    console.log("Reapplying", action);
                     dispatchWithoutSave(action);
                 }
 
@@ -97,5 +97,7 @@ export function useStorageBackedState<T extends object, A>(
 
             saveSoon();
         },
+
+        info,
     ] as const;
 }
